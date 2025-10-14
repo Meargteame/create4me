@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String?
+  role          String   @default("creator") // "creator" | "brand" | "admin"
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  campaigns    Campaign[]
+  applications CampaignApplication[]
+  sessions     Session[]
+  
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @map("user_id") @db.ObjectId
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Campaign {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @map("user_id") @db.ObjectId
+  title       String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages       Page[]
+  tasks       Task[]
+  applications CampaignApplication[]
+
+  @@map("campaigns")
+}
+
+model Page {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId     String   @map("campaign_id") @db.ObjectId
+  name          String
+  structureJson Json     @default("{}") @map("structure_json")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  campaign       Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@map("pages")
+}
+
+model Task {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId   String   @map("campaign_id") @db.ObjectId
+  title       String
+  description String?
+  status      String   @default("todo") // e.g., 'todo', 'in-progress', 'done'
+  priority    String   @default("medium") // e.g., 'low', 'medium', 'high'
+  dueDate     DateTime? @map("due_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  campaign     Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model CampaignApplication {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId    String   @map("campaign_id") @db.ObjectId
+  creatorId     String   @map("creator_id") @db.ObjectId
+  coverLetter   String?  @map("cover_letter")
+  portfolioLink String?  @map("portfolio_link")
+  deliverables  String?
+  status        String   @default("pending") // pending, approved, rejected
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creator     User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_applications")
+}
+
+model CreatorProfile {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique @map("user_id") @db.ObjectId
+  username        String   @unique
+  displayName     String   @map("display_name")
+  avatar          String?
+  bio             String?
+  category        String   @default("influencer") // influencer, content-creator, photographer, etc.
+  location        String?
+  isVerified      Boolean  @default(false) @map("is_verified")
+  isAvailable     Boolean  @default(true) @map("is_available")
+  rating          Float    @default(0)
+  followers       Int      @default(0)
+  engagement      Float    @default(0)
+  completedCampaigns Int   @default(0) @map("completed_campaigns")
+  platforms       Json     @default("[]") // ["instagram", "tiktok", "youtube"]
+  priceRange      Json?    @map("price_range") // {min: 500, max: 5000}
+  tags            Json     @default("[]") // ["fashion", "lifestyle", "travel"]
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  likes           CreatorLike[]
+  bookmarks       CreatorBookmark[]
+
+  @@map("creator_profiles")
+}
+
+model CreatorLike {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId  String   @map("creator_id") @db.ObjectId
+  userId     String   @map("user_id") @db.ObjectId
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  creator    CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, userId])
+  @@map("creator_likes")
+}
+
+model CreatorBookmark {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId  String   @map("creator_id") @db.ObjectId
+  userId     String   @map("user_id") @db.ObjectId
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  creator    CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, userId])
+  @@map("creator_bookmarks")
+}
+
+model Connection {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  requesterId  String   @map("requester_id") @db.ObjectId
+  receiverId   String   @map("receiver_id") @db.ObjectId
+  status       String   @default("pending") // pending, accepted, rejected
+  lastActive   DateTime @default(now()) @map("last_active")
+  mutualConnections Int  @default(0) @map("mutual_connections")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([requesterId, receiverId])
+  @@map("connections")
+}
