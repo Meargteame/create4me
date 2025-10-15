@@ -54,9 +54,6 @@ app.use(cors({
   maxAge: 86400 // 24 hours
 }));
 
-// Handle preflight requests for API routes only
-app.options('/api/*', cors());
-
 // Body parsing middleware
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
