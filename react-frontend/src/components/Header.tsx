@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { cn } from '../utils/cn'
 import NotificationsDropdown, { type Notification } from './NotificationsDropdown'
 import { getUserDisplayName, getUserInitials } from '../utils/user'
+import Logo from './Logo'
 // import CommandPalette from './ui/CommandPalette' // TEMPORARILY DISABLED
 
 export default function Header() {
@@ -123,17 +124,7 @@ export default function Header() {
       <div className="w-full flex items-center h-20">
         {/* Logo - Aligned to match sidebar width (256px/w-64) */}
         <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center w-64 flex-shrink-0 pl-6">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center gap-1.5"
-          >
-            <img src="/logo.png" alt="Create4Me" className="h-10 w-auto object-contain" />
-            <span className="text-xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-none tracking-tight">
-              CREATE4ME
-            </span>
-          </motion.div>
+          <Logo variant="default" />
         </Link>
 
         <div className="flex-1 flex items-center justify-end px-4 sm:px-6 lg:px-8">
