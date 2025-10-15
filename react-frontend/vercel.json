@@ -9,18 +9,16 @@
       }
     }
   ],
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    }
-  ],
   "routes": [
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/favicon\\.(ico|png|svg)", "dest": "/favicon.$1" },
-    { "src": "/robots\\.txt", "dest": "/robots.txt" },
-    { "src": "/[^.]*", "dest": "/index.html" }
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
