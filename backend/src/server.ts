@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 
 // Import database
-import prisma from './database/prisma';
+import { connectDB } from './database/mongoose';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -119,7 +119,7 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🗄️  Database: MongoDB with Prisma ORM`);
+  console.log(`🗄️  Database: MongoDB with Mongoose ODM`);
 });
 
 // Handle unhandled promise rejections
@@ -137,12 +137,12 @@ process.on('uncaughtException', (error) => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down gracefully...');
-  await prisma.$disconnect();
+  await require('./database/mongoose').disconnectDB();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Shutting down gracefully...');
-  await prisma.$disconnect();
+  await require('./database/mongoose').disconnectDB();
   process.exit(0);
 });
