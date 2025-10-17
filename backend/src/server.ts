@@ -42,11 +42,16 @@ const corsOptions = {
     callback: (err: Error | null, allow?: boolean) => void,
   ) {
     const allowedOrigins = [
+      // Production frontend
+      "https://create4mee.vercel.app",
+      // Development frontend
       "http://localhost:5173",
       "http://localhost:5174",
       "http://127.0.0.1:5173",
       "http://127.0.0.1:5174",
-    ];
+      // Allow from environment variable
+      process.env.FRONTEND_URL,
+    ].filter(Boolean); // Remove undefined values
 
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
