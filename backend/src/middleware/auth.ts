@@ -1,16 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
+import { Request, Response, NextFunction } from "express";
+import { AuthService } from "../services/authService";
+
+import { IUser } from "../models/User";
 
 export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    name: string | null;
-    role: string;
-    emailVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  user?: Partial<IUser>;
 }
 
 /**
@@ -19,15 +13,16 @@ export interface AuthRequest extends Request {
 export const authenticate = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: 'No token provided. Authorization header must be in format: Bearer <token>'
+        message:
+          "No token provided. Authorization header must be in format: Bearer <token>",
       });
     }
 
@@ -40,7 +35,7 @@ export const authenticate = async (
   } catch (error: any) {
     return res.status(401).json({
       success: false,
-      message: error.message || 'Invalid or expired token'
+      message: error.message || "Invalid or expired token",
     });
   }
 };
@@ -53,17 +48,16 @@ export const requireRole = (roles: string | string[]) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: "Authentication required",
       });
     }
 
     const allowedRoles = Array.isArray(roles) ? roles : [roles];
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!req.user?.role || !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: `Access denied. Required role: ${allowedRoles.join(' or ')}`,
-        userRole: req.user.role
+        message: `Access denied. Required role: ${allowedRoles.join(" or ")}`,
       });
     }
 
@@ -74,17 +68,17 @@ export const requireRole = (roles: string | string[]) => {
 /**
  * Middleware for creator-only routes
  */
-export const requireCreator = requireRole('creator');
+export const requireCreator = requireRole("creator");
 
 /**
  * Middleware for brand-only routes
  */
-export const requireBrand = requireRole('brand');
+export const requireBrand = requireRole("brand");
 
 /**
  * Middleware for admin-only routes
  */
-export const requireAdmin = requireRole('admin');
+export const requireAdmin = requireRole("admin");
 
 // For backwards compatibility
 export const authenticateToken = authenticate;

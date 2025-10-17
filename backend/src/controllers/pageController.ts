@@ -1,55 +1,51 @@
-import { Response } from 'express';
-import prisma from '../database/prisma';
-import { AuthRequest } from '../middleware/auth';
+import { Response } from "express";
+import mongoose from "mongoose";
+import { AuthRequest } from "../middleware/auth";
+import Page from "../models/Page";
+import Campaign from "../models/Campaign";
 
-// Create new page for campaign
+// Create new page for a campaign
 export const createPage = async (req: AuthRequest, res: Response) => {
   try {
     const { id: campaignId } = req.params;
     const { name, structureJson = {} } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
+
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid campaign ID" });
+    }
 
     if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Page name is required',
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Page name is required" });
     }
 
     // Verify campaign belongs to user
-    const campaign = await prisma.campaign.findFirst({
-      where: {
-        id: campaignId,
-        userId: userId!,
-      },
-    });
-
+    const campaign = await Campaign.findOne({ _id: campaignId, userId });
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found',
+        message: "Campaign not found or user not authorized",
       });
     }
 
-    const page = await prisma.page.create({
-      data: {
-        campaignId,
-        name,
-        structureJson,
-      },
+    const page = await Page.create({
+      campaignId,
+      name,
+      structureJson,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Page created successfully',
+      message: "Page created successfully",
       page,
     });
   } catch (error) {
-    console.error('Create page error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error("Create page error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -57,65 +53,61 @@ export const createPage = async (req: AuthRequest, res: Response) => {
 export const getPages = async (req: AuthRequest, res: Response) => {
   try {
     const { id: campaignId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    // Verify campaign belongs to user
-    const campaign = await prisma.campaign.findFirst({
-      where: {
-        id: campaignId,
-        userId: userId!,
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid campaign ID" });
+    }
 
+    // Verify campaign belongs to user to ensure authorization
+    const campaign = await Campaign.findOne({ _id: campaignId, userId });
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found',
+        message: "Campaign not found or user not authorized",
       });
     }
 
-    const pages = await prisma.page.findMany({
-      where: { campaignId },
-      orderBy: { createdAt: 'desc' },
-    });
+    const pages = await Page.find({ campaignId }).sort({ createdAt: "asc" });
 
     res.json({
       success: true,
       pages,
     });
   } catch (error) {
-    console.error('Get pages error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error("Get pages error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Get single page
+// Get a single page
 export const getPage = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const { pageId } = req.params;
+    const userId = req.user?._id;
 
-    const page = await prisma.page.findFirst({
-      where: { id },
-      include: {
-        campaign: {
-          select: {
-            id: true,
-            userId: true,
-            title: true,
-          },
-        },
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page ID" });
+    }
 
-    if (!page || page.campaign.userId !== userId) {
-      return res.status(404).json({
-        success: false,
-        message: 'Page not found',
-      });
+    const page = await Page.findById(pageId);
+
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    // Verify that the user owns the campaign this page belongs to
+    const campaign = await Campaign.findOne({ _id: page.campaignId, userId });
+    if (!campaign) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized to view this page" });
     }
 
     res.json({
@@ -123,148 +115,187 @@ export const getPage = async (req: AuthRequest, res: Response) => {
       page,
     });
   } catch (error) {
-    console.error('Get page error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error("Get page error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Update page structure/content
+// Update a page's details (e.g., name)
 export const updatePage = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const { name, structureJson } = req.body;
-    const userId = req.user?.id;
+    const { pageId } = req.params;
+    const { name } = req.body;
+    const userId = req.user?._id;
 
-    // Check if page exists and belongs to user
-    const existingPage = await prisma.page.findFirst({
-      where: { id },
-      include: {
-        campaign: {
-          select: {
-            userId: true,
-          },
-        },
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page ID" });
+    }
 
-    if (!existingPage || existingPage.campaign.userId !== userId) {
-      return res.status(404).json({
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    const campaign = await Campaign.findOne({ _id: page.campaignId, userId });
+    if (!campaign) {
+      return res.status(403).json({
         success: false,
-        message: 'Page not found',
+        message: "Not authorized to update this page",
       });
     }
 
-    const page = await prisma.page.update({
-      where: { id },
-      data: {
-        ...(name && { name }),
-        ...(structureJson && { structureJson }),
-      },
-    });
+    const updatedPage = await Page.findByIdAndUpdate(
+      pageId,
+      { name },
+      { new: true },
+    );
 
     res.json({
       success: true,
-      message: 'Page updated successfully',
-      page,
+      message: "Page updated successfully",
+      page: updatedPage,
     });
   } catch (error) {
-    console.error('Update page error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error("Update page error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Delete page
+// Delete a page
 export const deletePage = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const { pageId } = req.params;
+    const userId = req.user?._id;
 
-    // Check if page exists and belongs to user
-    const existingPage = await prisma.page.findFirst({
-      where: { id },
-      include: {
-        campaign: {
-          select: {
-            userId: true,
-          },
-        },
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page ID" });
+    }
 
-    if (!existingPage || existingPage.campaign.userId !== userId) {
-      return res.status(404).json({
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    const campaign = await Campaign.findOne({ _id: page.campaignId, userId });
+    if (!campaign) {
+      return res.status(403).json({
         success: false,
-        message: 'Page not found',
+        message: "Not authorized to delete this page",
       });
     }
 
-    await prisma.page.delete({
-      where: { id },
-    });
+    await Page.findByIdAndDelete(pageId);
 
     res.json({
       success: true,
-      message: 'Page deleted successfully',
+      message: "Page deleted successfully",
     });
   } catch (error) {
-    console.error('Delete page error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error("Delete page error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Publish page - convert to static HTML/JSON
-export const publishPage = async (req: AuthRequest, res: Response) => {
+// Update page structure (the main builder content)
+export const updatePageStructure = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const { pageId } = req.params;
+    const { structureJson } = req.body;
+    const userId = req.user?._id;
 
-    const page = await prisma.page.findFirst({
-      where: { id },
-      include: {
-        campaign: {
-          select: {
-            userId: true,
-            title: true,
-          },
-        },
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page ID" });
+    }
 
-    if (!page || page.campaign.userId !== userId) {
-      return res.status(404).json({
+    if (!structureJson) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Structure data is required" });
+    }
+
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    const campaign = await Campaign.findOne({ _id: page.campaignId, userId });
+    if (!campaign) {
+      return res.status(403).json({
         success: false,
-        message: 'Page not found',
+        message: "Not authorized to update this page structure",
       });
     }
 
-    // Here you would implement the logic to convert the page structure
-    // to static HTML or a publishable format
-    const publishedData = {
-      name: page.name,
-      structure: page.structureJson,
-      publishedAt: new Date().toISOString(),
-      campaignTitle: page.campaign.title,
-    };
+    const updatedPage = await Page.findByIdAndUpdate(
+      pageId,
+      { structureJson },
+      { new: true },
+    );
 
     res.json({
       success: true,
-      message: 'Page published successfully',
-      publishedData,
+      message: "Page structure updated successfully",
+      page: updatedPage,
     });
   } catch (error) {
-    console.error('Publish page error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
+    console.error("Update page structure error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Publish a page
+export const publishPage = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id: pageId } = req.params;
+    const userId = req.user?._id;
+
+    if (!mongoose.Types.ObjectId.isValid(pageId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page ID" });
+    }
+
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found" });
+    }
+
+    // Verify campaign ownership
+    const campaign = await Campaign.findOne({ _id: page.campaignId, userId });
+    if (!campaign) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to publish this page",
+      });
+    }
+
+    const updatedPage = await Page.findByIdAndUpdate(
+      pageId,
+      { isPublished: true, publishedAt: new Date() },
+      { new: true },
+    );
+
+    res.json({
+      success: true,
+      message: "Page published successfully",
+      page: updatedPage,
     });
+  } catch (error) {
+    console.error("Publish page error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

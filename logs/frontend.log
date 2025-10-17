@@ -1,0 +1,98 @@
+
+> react-frontend@0.0.0 dev
+> vite
+
+
+  VITE v7.1.10  ready in 281 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+3:06:01 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx, /src/pages/FeedPage_new.tsx, /src/pages/CreatorsPage.tsx, /src/index.css
+3:06:02 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+3:06:02 PM [vite] (client) hmr update /src/App.tsx, /src/components/ProtectedRoute.tsx, /src/pages/LoginPage.tsx, /src/pages/SignupPage.tsx, /src/components/Header.tsx, /src/pages/FeedPage_new.tsx
+3:08:51 PM [vite] (client) hmr update /src/pages/CreatorsPage.tsx, /src/index.css
+3:14:19 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx, /src/pages/FeedPage_new.tsx, /src/pages/CreatorsPage.tsx, /src/pages/NetworkPage.tsx, /src/pages/CreatorDashboard.tsx, /src/pages/CampaignBoardPage.tsx, /src/pages/MyProfilePage.tsx, /src/index.css
+3:14:20 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+3:14:20 PM [vite] (client) hmr update /src/App.tsx, /src/components/ProtectedRoute.tsx, /src/pages/LoginPage.tsx, /src/pages/SignupPage.tsx, /src/components/Header.tsx, /src/pages/FeedPage_new.tsx, /src/pages/DashboardPage.tsx, /src/pages/CreatorDashboard.tsx, /src/components/ProfileCompletionPrompt.tsx, /src/pages/AccountPage.tsx, /src/pages/MyProfilePage.tsx
+3:14:41 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx, /src/pages/FeedPage_new.tsx, /src/pages/CreatorsPage.tsx, /src/pages/NetworkPage.tsx, /src/pages/CreatorDashboard.tsx, /src/pages/CampaignBoardPage.tsx, /src/pages/MyProfilePage.tsx, /src/index.css
+3:14:43 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+3:14:43 PM [vite] (client) hmr update /src/App.tsx, /src/components/ProtectedRoute.tsx, /src/pages/LoginPage.tsx, /src/pages/SignupPage.tsx, /src/components/Header.tsx, /src/pages/FeedPage_new.tsx, /src/pages/DashboardPage.tsx, /src/pages/CreatorDashboard.tsx, /src/components/ProfileCompletionPrompt.tsx, /src/pages/AccountPage.tsx, /src/pages/MyProfilePage.tsx
+3:15:00 PM [vite] (client) hmr update /src/pages/CampaignBoardPage.tsx, /src/index.css
+3:21:28 PM [vite] (client) hmr update /src/components/Footer.tsx, /src/index.css
+3:25:00 PM [vite] (client) page reload index.html
+3:25:39 PM [vite] vite.config.ts changed, restarting server...
+failed to load config from /home/meareg/Desktop/create4me/backend/react-frontend/vite.config.ts
+3:25:39 PM [vite] Cannot find package 'rollup-plugin-visualizer' imported from /home/meareg/Desktop/create4me/backend/react-frontend/node_modules/.vite-temp/vite.config.ts.timestamp-1760703939732-83d479df820a9.mjs
+3:25:39 PM [vite] server restart failed
+3:31:31 PM [vite] (client) hmr update /src/pages/CreatorDashboard.tsx, /src/index.css
+3:31:32 PM [vite] Internal server error: /home/meareg/Desktop/create4me/backend/react-frontend/src/pages/CreatorDashboard.tsx: Expected corresponding JSX closing tag for <div>. (146:10)
+
+  144 |               </li>
+  145 |             ))}
+> 146 |           </ul>
+      |           ^
+  147 |         </nav>
+  148 |         <div className="mt-8">
+  149 |           <Link to="/my-profile" className="block text-gray-500 text-sm hover:text-gray-900">View Profile</Link>
+  Plugin: vite:react-babel
+  File: /home/meareg/Desktop/create4me/backend/react-frontend/src/pages/CreatorDashboard.tsx:146:10
+  144 |                </li>
+  145 |              ))}
+  146 |            </ul>
+      |            ^
+  147 |          </nav>
+  148 |          <div className="mt-8">
+      at constructor (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4760:16)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4731:32)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4731:32)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4731:32)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4731:32)
+      at TypeScriptParserMixin.jsxParseElement (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4782:17)
+      at TypeScriptParserMixin.parseExprAtom (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4792:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11085:23)
+      at TypeScriptParserMixin.parseUpdate (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11070:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11050:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9857:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10903:61)
+      at TypeScriptParserMixin.parseExprOps (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10908:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10885:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10835:21)
+      at /home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9795:39
+      at TypeScriptParserMixin.tryParse (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:6938:20)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9795:18)
+      at /home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10804:39
+      at TypeScriptParserMixin.allowInAnd (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12436:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10804:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12503:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11683:28)
+      at TypeScriptParserMixin.parseExprAtom (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11335:23)
+      at TypeScriptParserMixin.parseExprAtom (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:4797:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11085:23)
+      at TypeScriptParserMixin.parseUpdate (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11070:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:11050:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9857:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10903:61)
+      at TypeScriptParserMixin.parseExprOps (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10908:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10885:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10835:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9806:20)
+      at TypeScriptParserMixin.parseExpressionBase (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10788:23)
+      at /home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10784:39
+      at TypeScriptParserMixin.allowInAnd (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12431:16)
+      at TypeScriptParserMixin.parseExpression (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:10784:17)
+      at TypeScriptParserMixin.parseReturnStatement (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:13151:28)
+      at TypeScriptParserMixin.parseStatementContent (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12807:21)
+      at TypeScriptParserMixin.parseStatementContent (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:9532:18)
+      at TypeScriptParserMixin.parseStatementLike (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12776:17)
+      at TypeScriptParserMixin.parseStatementListItem (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12756:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:13325:61)
+      at TypeScriptParserMixin.parseBlockBody (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:13318:10)
+      at TypeScriptParserMixin.parseBlock (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:13306:10)
+      at TypeScriptParserMixin.parseFunctionBody (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12110:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/home/meareg/Desktop/create4me/backend/react-frontend/node_modules/@babel/parser/lib/index.js:12096:10)
+3:33:08 PM [vite] (client) hmr update /src/index.css
+3:34:30 PM [vite] (client) hmr update /src/index.css
+3:35:17 PM [vite] (client) hmr update /src/index.css
+3:36:12 PM [vite] (client) hmr update /src/index.css

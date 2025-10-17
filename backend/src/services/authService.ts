@@ -1,16 +1,18 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import { connectDB } from '../database/mongoose';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { User } from "../models/User";
+import CreatorProfile from "../models/CreatorProfile";
+import { connectDB } from "../database/mongoose";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-super-secret-key-change-in-production";
+const JWT_EXPIRES_IN = "7d";
 
 export interface RegisterData {
   email: string;
   password: string;
   name?: string;
-  role?: 'creator' | 'brand';
+  role?: "creator" | "brand";
 }
 
 export interface LoginData {
@@ -26,12 +28,12 @@ export class AuthService {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.email)) {
-      throw new Error('Invalid email format');
+      throw new Error("Invalid email format");
     }
 
     // Validate password strength
     if (data.password.length < 8) {
-      throw new Error('Password must be at least 8 characters long');
+      throw new Error("Password must be at least 8 characters long");
     }
 
     // Ensure database connection
@@ -41,7 +43,7 @@ export class AuthService {
     const existingUser = await User.findOne({ email: data.email });
 
     if (existingUser) {
-      throw new Error('User with this email already exists');
+      throw new Error("User with this email already exists");
     }
 
     // Create user (password will be hashed by pre-save hook)
@@ -49,16 +51,41 @@ export class AuthService {
       email: data.email,
       passwordHash: data.password, // Will be hashed by pre-save hook
       name: data.name,
-      role: data.role || 'creator'
+      role: data.role || "creator",
     });
 
     await user.save();
+
+    // If user is a creator, automatically create a creator profile
+    if (user.role === "creator") {
+      const creatorProfile = new CreatorProfile({
+        userId: user._id,
+        username:
+          data.name?.toLowerCase().replace(/\s+/g, "_") ||
+          user.email.split("@")[0],
+        displayName: data.name || user.email.split("@")[0],
+        bio: "New creator - profile not yet completed",
+        category: "General",
+        location: "Not specified",
+        isVerified: false,
+        isAvailable: true,
+        rating: 0,
+        followers: 0,
+        engagement: 0,
+        completedCampaigns: 0,
+        platforms: [],
+        tags: [],
+      });
+
+      await creatorProfile.save();
+      console.log(`✅ Created creator profile for user: ${user.email}`);
+    }
 
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN },
     );
 
     // Create session (simplified for now)
@@ -67,8 +94,9 @@ export class AuthService {
 
     // For Mongoose, we'll create a simple session document
     // Note: In a full implementation, you'd want a proper Session model
+    const { passwordHash, ...userObject } = user.toObject();
 
-    return { user, token };
+    return { user: userObject, token };
   }
 
   /**
@@ -82,26 +110,25 @@ export class AuthService {
     const user = await User.findOne({ email: data.email });
 
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new Error("Invalid email or password");
     }
 
     // Verify password
     const isValidPassword = await user.comparePassword(data.password);
 
     if (!isValidPassword) {
-      throw new Error('Invalid email or password');
+      throw new Error("Invalid email or password");
     }
 
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN },
     );
 
     // Return user without password
-    const userObject = user.toObject();
-    delete userObject.passwordHash;
+    const { passwordHash, ...userObject } = user.toObject();
 
     return { user: userObject, token };
   }
@@ -112,7 +139,9 @@ export class AuthService {
   static async logout(token: string) {
     // For Mongoose implementation, we'll skip complex session management for now
     // In a full implementation, you'd want a proper Session model
-    console.log('Logout requested - session management simplified for Mongoose migration');
+    console.log(
+      "Logout requested - session management simplified for Mongoose migration",
+    );
   }
 
   /**
@@ -134,16 +163,15 @@ export class AuthService {
       const user = await User.findById(decoded.userId);
 
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Return user without password
-      const userObject = user.toObject();
-      delete userObject.passwordHash;
+      const { passwordHash, ...userObject } = user.toObject();
 
       return userObject;
     } catch (error) {
-      throw new Error('Invalid or expired token');
+      throw new Error("Invalid or expired token");
     }
   }
 
@@ -159,7 +187,20 @@ export class AuthService {
    */
   static async cleanupExpiredSessions() {
     // Simplified for Mongoose migration
-    console.log('Session cleanup - simplified for Mongoose migration');
+    console.log("Session cleanup - simplified for Mongoose migration");
     return 0;
+  }
+
+  /**
+   * Get user by ID
+   */
+  static async getUserById(userId: string) {
+    await connectDB();
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const { passwordHash, ...userObject } = user.toObject();
+    return userObject;
   }
 }

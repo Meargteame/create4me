@@ -1,38 +1,44 @@
-import { Response } from 'express';
-import prisma from '../database/prisma';
-import { AuthRequest } from '../middleware/auth';
+import { Response } from "express";
+import { AuthRequest } from "../middleware/auth";
+import Campaign from "../models/Campaign";
+import mongoose from "mongoose";
 
 // Create new campaign
 export const createCampaign = async (req: AuthRequest, res: Response) => {
   try {
     const { title, description } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id; // Mongoose uses _id
 
     if (!title) {
       return res.status(400).json({
         success: false,
-        message: 'Title is required',
+        message: "Title is required",
       });
     }
 
-    const campaign = await prisma.campaign.create({
-      data: {
-        userId: userId!,
-        title,
-        description,
-      },
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const campaign = await Campaign.create({
+      userId,
+      title,
+      description,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Campaign created successfully',
+      message: "Campaign created successfully",
       campaign,
     });
   } catch (error) {
-    console.error('Create campaign error:', error);
+    console.error("Create campaign error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -40,31 +46,26 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
 // Get all user campaigns
 export const getCampaigns = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    const campaigns = await prisma.campaign.findMany({
-      where: { userId: userId! },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        pages: {
-          select: {
-            id: true,
-            name: true,
-            createdAt: true,
-          },
-        },
-      },
-    });
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const campaigns = await Campaign.find({ userId }).sort({ createdAt: -1 });
 
     res.json({
       success: true,
       campaigns,
     });
   } catch (error) {
-    console.error('Get campaigns error:', error);
+    console.error("Get campaigns error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -72,27 +73,32 @@ export const getCampaigns = async (req: AuthRequest, res: Response) => {
 // Get all campaigns for any user (for creator campaign board)
 export const getAllCampaigns = async (req: AuthRequest, res: Response) => {
   try {
-    const campaigns = await prisma.campaign.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { // Include brand/user info
-          select: {
-            id: true,
-            email: true,
-          }
-        }
-      },
-    });
+    const campaigns = await Campaign.find({})
+      .sort({ createdAt: -1 })
+      .populate("userId", "id name email")
+      .lean();
+
+    // Transform campaigns to match frontend expectations
+    const transformedCampaigns = campaigns.map((campaign: any) => ({
+      id: campaign._id.toString(),
+      title: campaign.title,
+      description: campaign.description,
+      createdAt: campaign.createdAt,
+      budget: campaign.budget,
+      deadline: campaign.deadline,
+      category: campaign.category,
+      user: campaign.userId || { email: "unknown@example.com" },
+    }));
 
     res.json({
       success: true,
-      campaigns,
+      campaigns: transformedCampaigns,
     });
   } catch (error) {
-    console.error('Get all campaigns error:', error);
+    console.error("Get all campaigns error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -101,22 +107,23 @@ export const getAllCampaigns = async (req: AuthRequest, res: Response) => {
 export const getCampaign = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    const campaign = await prisma.campaign.findFirst({
-      where: {
-        id,
-        userId: userId!,
-      },
-      include: {
-        pages: true,
-      },
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid campaign ID" });
+    }
+
+    const campaign = await Campaign.findOne({
+      _id: id,
+      userId,
     });
 
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found',
+        message: "Campaign not found or user not authorized",
       });
     }
 
@@ -125,10 +132,10 @@ export const getCampaign = async (req: AuthRequest, res: Response) => {
       campaign,
     });
   } catch (error) {
-    console.error('Get campaign error:', error);
+    console.error("Get campaign error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -138,35 +145,43 @@ export const updateCampaign = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    const campaign = await prisma.campaign.updateMany({
-      where: {
-        id,
-        userId: userId!,
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid campaign ID" });
+    }
+
+    const updatedCampaign = await Campaign.findOneAndUpdate(
+      {
+        _id: id,
+        userId,
       },
-      data: {
+      {
         title,
         description,
       },
-    });
+      { new: true }, // Return the updated document
+    );
 
-    if (campaign.count === 0) {
+    if (!updatedCampaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found or user not authorized',
+        message: "Campaign not found or user not authorized",
       });
     }
 
     res.json({
       success: true,
-      message: 'Campaign updated successfully',
+      message: "Campaign updated successfully",
+      campaign: updatedCampaign,
     });
   } catch (error) {
-    console.error('Update campaign error:', error);
+    console.error("Update campaign error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -175,31 +190,39 @@ export const updateCampaign = async (req: AuthRequest, res: Response) => {
 export const deleteCampaign = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    const campaign = await prisma.campaign.deleteMany({
-      where: {
-        id,
-        userId: userId!,
-      },
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid campaign ID" });
+    }
+
+    const deletedCampaign = await Campaign.findOneAndDelete({
+      _id: id,
+      userId,
     });
 
-    if (campaign.count === 0) {
+    if (!deletedCampaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found or user not authorized',
+        message: "Campaign not found or user not authorized",
       });
     }
 
+    // Optional: Also delete associated pages and tasks
+    // await Page.deleteMany({ campaignId: id });
+    // await Task.deleteMany({ campaignId: id });
+
     res.json({
       success: true,
-      message: 'Campaign deleted successfully',
+      message: "Campaign deleted successfully",
     });
   } catch (error) {
-    console.error('Delete campaign error:', error);
+    console.error("Delete campaign error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
