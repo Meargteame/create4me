@@ -1,0 +1,13 @@
+{
+  "name": "create4me-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd backend/react-frontend && npm install && npm run build",
+    "install": "cd backend/react-frontend && npm install",
+    "vercel-build": "cd backend/react-frontend && npm install && npm run build"
+  },
+  "workspaces": [
+    "backend/react-frontend"
+  ]
+}

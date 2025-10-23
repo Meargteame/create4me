@@ -1,7 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "cd backend/react-frontend && npm install && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "backend/react-frontend/dist",
-  "installCommand": "cd backend/react-frontend && npm install",
-  "framework": "vite"
+  "installCommand": "npm run install",
+  "framework": "vite",
+  "env": {
+    "NODE_VERSION": "20"
+  }
 }
