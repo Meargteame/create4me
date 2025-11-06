@@ -1,84 +1,63 @@
-import { Request, Response, NextFunction } from "express";
-import { AuthService } from "../services/authService";
-
-import { IUser } from "../models/User";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/User';
 
 export interface AuthRequest extends Request {
-  user?: Partial<IUser>;
+  user?: any;
+  userId?: string;
 }
 
-/**
- * Middleware to verify JWT token and authenticate user
- */
 export const authenticate = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
-) => {
+  next: NextFunction
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({
         success: false,
-        message:
-          "No token provided. Authorization header must be in format: Bearer <token>",
+        message: 'No token provided'
       });
+      return;
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-
-    const user = await AuthService.verifyToken(token);
-
+    
+    const token = authHeader.substring(7);
+    const secret = process.env.JWT_SECRET || 'fallback-secret';
+    
+    const decoded = jwt.verify(token, secret) as { userId: string };
+    
+    const user = await User.findById(decoded.userId).select('-passwordHash');
+    
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+      return;
+    }
+    
     req.user = user;
+    req.userId = user.id;
     next();
-  } catch (error: any) {
-    return res.status(401).json({
+  } catch (error) {
+    res.status(401).json({
       success: false,
-      message: error.message || "Invalid or expired token",
+      message: 'Invalid token'
     });
   }
 };
 
-/**
- * Middleware to check if user has required role(s)
- */
-export const requireRole = (roles: string | string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({
+export const requireRole = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({
         success: false,
-        message: "Authentication required",
+        message: 'Insufficient permissions'
       });
+      return;
     }
-
-    const allowedRoles = Array.isArray(roles) ? roles : [roles];
-
-    if (!req.user?.role || !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `Access denied. Required role: ${allowedRoles.join(" or ")}`,
-      });
-    }
-
     next();
   };
 };
-
-/**
- * Middleware for creator-only routes
- */
-export const requireCreator = requireRole("creator");
-
-/**
- * Middleware for brand-only routes
- */
-export const requireBrand = requireRole("brand");
-
-/**
- * Middleware for admin-only routes
- */
-export const requireAdmin = requireRole("admin");
-
-// For backwards compatibility
-export const authenticateToken = authenticate;

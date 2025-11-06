@@ -1,13 +1,24 @@
 {
-  "name": "create4me-monorepo",
+  "name": "create4me",
   "version": "1.0.0",
+  "description": "Ethiopian Creator Marketplace - Connecting creators with brands",
   "private": true,
-  "scripts": {
-    "build": "cd backend/react-frontend && npm install && npm run build",
-    "install": "cd backend/react-frontend && npm install",
-    "vercel-build": "cd backend/react-frontend && npm install && npm run build"
-  },
   "workspaces": [
-    "backend/react-frontend"
-  ]
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": ["marketplace", "creators", "ethiopia", "saas"],
+  "author": "Meareg Teame",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
