@@ -70,7 +70,9 @@ class ApiClient {
   // Creators
   async getCreators(params?: any) {
     const query = params ? `?${new URLSearchParams(params)}` : '';
-    return this.request(`/creators${query}`);
+    const response = await this.request(`/creators${query}`);
+    // Backend returns { data: [...] }, frontend expects { creators: [...] }
+    return { creators: response.data || response.creators || [] };
   }
 
   async getCreator(id: string) {
@@ -85,6 +87,12 @@ class ApiClient {
     });
   }
 
+  async applyForCampaign(campaignId: string) {
+    return this.request(`/campaigns/${campaignId}/apply`, {
+      method: 'POST',
+    });
+  }
+
   async getMyApplications() {
     return this.request('/applications/my');
   }
@@ -93,10 +101,10 @@ class ApiClient {
     return this.request(`/applications/campaign/${campaignId}`);
   }
 
-  async updateApplicationStatus(id: string, status: string) {
-    return this.request(`/applications/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status })
+  async updateApplicationStatus(id: string, status: 'accepted' | 'rejected') {
+    return this.request(`/applications/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
     });
   }
 
@@ -151,26 +159,25 @@ class ApiClient {
     return this.request('/messages/conversations');
   }
 
-  async getMessages(userId: string) {
-    return this.request(`/messages/conversation/${userId}`);
+  async getMessages(partnerId: string) {
+    return this.request(`/chat/${partnerId}`);
   }
 
-  async sendMessage(recipientId: string, content: string) {
-    return this.request('/messages/send', {
+  async sendMessage(data: { receiverId: string; content: string; conversationId?: string }) {
+    return this.request('/chat/send', {
       method: 'POST',
-      body: JSON.stringify({ receiverId: recipientId, content })
-    });
-  }
-
-  async markAsRead(messageId: string) {
-    return this.request(`/messages/${messageId}/read`, {
-      method: 'PATCH'
+      body: JSON.stringify(data),
     });
   }
 
   // Application detail endpoint
   async getApplication(id: string) {
     return this.request(`/applications/${id}`);
+  }
+
+  // Payment history endpoint
+  async getPaymentHistory(page: number) {
+    return this.request(`/payments/history?page=${page}`);
   }
 }
 

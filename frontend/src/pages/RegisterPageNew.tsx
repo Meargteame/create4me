@@ -7,7 +7,7 @@ import { FaEnvelope, FaLock, FaUser, FaArrowRight, FaCheckCircle, FaRocket, FaSt
 export default function RegisterPageNew() {
   const [searchParams] = useSearchParams();
   const initialRole = searchParams.get('role') || 'creator';
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,244 +33,231 @@ export default function RegisterPageNew() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-50 py-12">
+      {/* Global Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+
+        {/* Gradient Orbs */}
+        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+      </div>
+
+      <div className="w-full max-w-6xl mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center gap-12 md:gap-24">
+
+        {/* Left Side - Welcome Text (Hidden on mobile) */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="hidden md:block flex-1"
         >
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C4</span>
+          <Link to="/" className="inline-flex items-center gap-3 mb-8 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <span className="text-white font-black text-xl">C4</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Create4Me
             </span>
           </Link>
 
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Create your account</h1>
-            <p className="text-gray-600 text-lg">Start your journey with Create4Me today</p>
-          </div>
+          <h1 className="text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight">
+            Join the <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">Future of Work</span> in Ethiopia.
+          </h1>
 
-          {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-3">
-              I am a...
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setRole('brand')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  role === 'brand'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <FaRocket className={`text-2xl mb-2 mx-auto ${role === 'brand' ? 'text-blue-600' : 'text-gray-400'}`} />
-                <div className="font-semibold text-gray-900">Brand</div>
-                <div className="text-xs text-gray-600 mt-1">Find creators</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole('creator')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  role === 'creator'
-                    ? 'border-purple-600 bg-purple-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <FaStar className={`text-2xl mb-2 mx-auto ${role === 'creator' ? 'text-purple-600' : 'text-gray-400'}`} />
-                <div className="font-semibold text-gray-900">Creator</div>
-                <div className="text-xs text-gray-600 mt-1">Get opportunities</div>
-              </button>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FaUser />
-                </div>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FaEnvelope />
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FaLock />
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
-              </div>
-              <p className="mt-2 text-xs text-gray-500">Must be at least 6 characters</p>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="group w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  Create Account
-                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-
-            {/* Terms */}
-            <p className="text-xs text-gray-500 text-center">
-              By signing up, you agree to our{' '}
-              <Link to="/terms" className="text-blue-600 hover:text-blue-700">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-blue-600 hover:text-blue-700">
-                Privacy Policy
-              </Link>
-            </p>
-          </form>
-
-          {/* Divider */}
-          <div className="my-8 flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-sm text-gray-500 font-medium">or</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
-          </div>
-
-          {/* Sign In Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-semibold text-blue-600 hover:text-blue-700"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Right Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-12 items-center justify-center relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full -ml-48 -mb-48"></div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="relative z-10 max-w-lg"
-        >
-          <h2 className="text-5xl font-bold text-white mb-6 leading-tight">
-            Join 500+ Brands & Creators
-          </h2>
-          <p className="text-xl text-blue-100 mb-12">
-            The premier marketplace for authentic Ethiopian influencer marketing.
+          <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+            Whether you're a brand looking to grow or a creator ready to earn, your journey starts here.
           </p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-6 mb-12">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl font-bold text-white mb-2">500+</div>
-              <div className="text-blue-100">Active Users</div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/50 shadow-sm">
+              <div className="text-4xl font-black text-green-600 mb-2">500+</div>
+              <div className="text-gray-600 font-medium">Active Brands</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl font-bold text-white mb-2">2.4M</div>
-              <div className="text-blue-100">Total Reach</div>
+            <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/50 shadow-sm">
+              <div className="text-4xl font-black text-blue-600 mb-2">2.5k+</div>
+              <div className="text-gray-600 font-medium">Verified Creators</div>
             </div>
           </div>
+        </motion.div>
 
-          {/* Features */}
-          <div className="space-y-4">
-            {[
-              'Free to get started',
-              'No hidden fees',
-              'Verified profiles only',
-              'Secure payments'
-            ].map((feature, index) => (
+        {/* Right Side - Register Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="w-full md:w-[520px]"
+        >
+          <div className="glass-enhanced rounded-3xl p-8 md:p-10 shadow-2xl border border-white/50 bg-white/60 backdrop-blur-xl">
+            <div className="mb-8 text-center md:text-left">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+              <p className="text-gray-600">Start your free journey today</p>
+            </div>
+
+            {/* Role Selection */}
+            <div className="mb-8">
+              <label className="block text-sm font-bold text-gray-700 mb-3 ml-1">
+                I am a...
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setRole('brand')}
+                  className={`p-4 rounded-2xl border-2 transition-all relative overflow-hidden group ${role === 'brand'
+                      ? 'border-green-500 bg-green-50/50 shadow-md'
+                      : 'border-gray-200 bg-white/50 hover:border-green-300 hover:bg-green-50/30'
+                    }`}
+                >
+                  <div className={`relative z-10 flex flex-col items-center ${role === 'brand' ? 'scale-105' : ''} transition-transform`}>
+                    <FaRocket className={`text-2xl mb-2 ${role === 'brand' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-500'}`} />
+                    <div className={`font-bold ${role === 'brand' ? 'text-gray-900' : 'text-gray-600'}`}>Brand</div>
+                    <div className="text-xs text-gray-500 mt-1">I want to hire</div>
+                  </div>
+                  {role === 'brand' && (
+                    <motion.div
+                      layoutId="role-bg"
+                      className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-teal-500/10"
+                    />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('creator')}
+                  className={`p-4 rounded-2xl border-2 transition-all relative overflow-hidden group ${role === 'creator'
+                      ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                      : 'border-gray-200 bg-white/50 hover:border-blue-300 hover:bg-blue-50/30'
+                    }`}
+                >
+                  <div className={`relative z-10 flex flex-col items-center ${role === 'creator' ? 'scale-105' : ''} transition-transform`}>
+                    <FaStar className={`text-2xl mb-2 ${role === 'creator' ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-500'}`} />
+                    <div className={`font-bold ${role === 'creator' ? 'text-gray-900' : 'text-gray-600'}`}>Creator</div>
+                    <div className="text-xs text-gray-500 mt-1">I want to work</div>
+                  </div>
+                  {role === 'creator' && (
+                    <motion.div
+                      layoutId="role-bg"
+                      className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10"
+                    />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {error && (
               <motion.div
-                key={feature}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                className="flex items-center gap-3 text-white"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <FaCheckCircle className="text-sm" />
-                </div>
-                <span className="text-lg">{feature}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                {error}
               </motion.div>
-            ))}
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
+                  Full Name
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
+                    <FaUser />
+                  </div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-gray-900 placeholder-gray-400"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
+                  Email Address
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
+                    <FaEnvelope />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-gray-900 placeholder-gray-400"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
+                  Password
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
+                    <FaLock />
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-gray-900 placeholder-gray-400"
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500 ml-1">Must be at least 6 characters</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`group w-full py-4 bg-gradient-to-r text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${role === 'brand'
+                    ? 'from-green-600 to-teal-600'
+                    : 'from-blue-600 to-indigo-600'
+                  }`}
+              >
+                {loading ? (
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    Create Account
+                    <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-gray-500 text-center px-4">
+                By signing up, you agree to our{' '}
+                <Link to="/terms" className="text-gray-700 font-semibold hover:underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy" className="text-gray-700 font-semibold hover:underline">
+                  Privacy Policy
+                </Link>
+              </p>
+            </form>
+
+            <div className="mt-8 pt-8 border-t border-gray-200/60 text-center">
+              <p className="text-gray-600">
+                Already have an account?{' '}
+                <Link
+                  to="/login"
+                  className="font-bold text-green-600 hover:text-green-700 transition-colors inline-flex items-center gap-1 group"
+                >
+                  Sign in
+                  <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </p>
+            </div>
           </div>
         </motion.div>
       </div>

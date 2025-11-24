@@ -4,10 +4,10 @@ import { api } from '../lib/api';
 import DashboardLayout from '../components/DashboardLayout';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FaBookmark, 
-  FaDollarSign, 
-  FaClock, 
+import {
+  FaBookmark,
+  FaDollarSign,
+  FaClock,
   FaSearch,
   FaFire,
   FaFilter,
@@ -60,10 +60,10 @@ export default function FeedPageNew() {
 
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+      campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
     if (!matchesSearch) return false;
-    
+
     if (filter === 'all') return true;
     if (filter === 'urgent') {
       const daysLeft = getDaysLeft(campaign.deadline);
@@ -107,15 +107,14 @@ export default function FeedPageNew() {
               {filteredCampaigns.length} active campaigns available
             </p>
           </div>
-          
+
           {savedCampaigns.size > 0 && (
             <button
               onClick={() => setFilter('saved')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-                filter === 'saved'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${filter === 'saved'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300'
+                }`}
             >
               <FaBookmark />
               Saved ({savedCampaigns.size})
@@ -153,11 +152,10 @@ export default function FeedPageNew() {
               <button
                 key={filterOption.id}
                 onClick={() => setFilter(filterOption.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
-                  filter === filterOption.id
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${filter === filterOption.id
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {filterOption.icon}
                 {filterOption.label}
@@ -166,7 +164,7 @@ export default function FeedPageNew() {
           </div>
         </div>
 
-        {/* Campaigns List */}
+        {/* Campaign Cards */}
         {filteredCampaigns.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -178,7 +176,7 @@ export default function FeedPageNew() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">No opportunities found</h3>
             <p className="text-gray-600 mb-6">
-              {filter === 'saved' 
+              {filter === 'saved'
                 ? "You haven't saved any campaigns yet"
                 : 'Try adjusting your filters or check back later'}
             </p>
@@ -187,13 +185,13 @@ export default function FeedPageNew() {
                 setFilter('all');
                 setSearchQuery('');
               }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all"
+              className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all"
             >
               View All Opportunities
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {filteredCampaigns.map((campaign, index) => {
               const daysLeft = getDaysLeft(campaign.deadline);
               const isUrgent = daysLeft !== null && daysLeft <= 7;
@@ -209,83 +207,139 @@ export default function FeedPageNew() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-lg transition-all"
+                  className="card-3d-tilt group bg-gradient-to-br from-white to-gray-50/30 rounded-2xl p-8 hover:shadow-2xl transition-all duration-300"
+                  style={{
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    background: 'rgba(255, 255, 255, 0.98)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.06), 0 20px 40px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+                  }}
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-4 mb-4">
+                  {/* Header Row - Brand & Compensation */}
+                  <div className="flex items-start justify-between gap-6 mb-6">
+                    {/* Left: Brand & Title */}
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {campaign.title}
-                        </h3>
-                        {isUrgent && (
-                          <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1">
-                            <FaFire />
-                            {daysLeft} days left
+                      {/* Brand Name with Verified Badge */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <span className="text-base font-bold text-green-700">
+                            {campaign.userId?.name?.[0] || 'B'}
                           </span>
-                        )}
-                        {campaign.category && (
-                          <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-lg">
-                            {campaign.category}
-                          </span>
-                        )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-700">
+                              {campaign.userId?.name || 'Brand Name'}
+                            </span>
+                            <FaCheckCircle className="text-green-500 text-sm" title="Verified Brand" />
+                          </div>
+                          <span className="text-xs text-gray-500">Posted {timeAgo}</span>
+                        </div>
                       </div>
-                      <p className="text-gray-700 text-sm leading-relaxed line-clamp-2 mb-3">
+
+                      {/* Campaign Title */}
+                      <h3 className="text-2xl font-bold text-gray-900 group-hover:text-green-600 transition-colors mb-3">
+                        {campaign.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
                         {campaign.description}
                       </p>
                     </div>
-                    
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSave(campaign._id);
-                      }}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-                    >
-                      <FaBookmark className={`text-xl ${isSaved ? 'text-blue-600' : 'text-gray-400'}`} />
-                    </button>
-                  </div>
 
-                  {/* Platforms */}
-                  {campaign.platforms && campaign.platforms.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {campaign.platforms.map((platform: string, i: number) => (
-                        <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">
-                          {platform}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                    {/* Right: Compensation (LARGE & PROMINENT) */}
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                        Compensation
+                      </div>
+                      <div className="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
+                        ${campaign.budget?.toLocaleString() || '0'}
+                      </div>
 
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-6 text-sm">
-                      {campaign.budget && (
-                        <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FaDollarSign className="text-green-600 text-sm" />
-                          </div>
-                          ${campaign.budget.toLocaleString()}
+                      {/* Urgent Badge */}
+                      {isUrgent && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-lg shadow-md">
+                          <FaFire />
+                          {daysLeft} days left
                         </div>
                       )}
-                      <div className="flex items-center gap-2 text-gray-600">
+                    </div>
+                  </div>
+
+                  {/* Bottom Row - Platforms, Deadline & Action */}
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-200/50">
+                    {/* Left: Platform Icons & Deadline */}
+                    <div className="flex items-center gap-6">
+                      {/* Monochrome Social Icons */}
+                      {campaign.platforms && campaign.platforms.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 font-semibold">Platforms:</span>
+                          <div className="flex items-center gap-1.5">
+                            {campaign.platforms.slice(0, 3).map((platform: string, i: number) => {
+                              let Icon = null;
+                              const platformLower = platform.toLowerCase();
+                              if (platformLower.includes('tiktok')) Icon = <FaRocket />;
+                              else if (platformLower.includes('instagram')) Icon = <FaBookmark />;
+                              else if (platformLower.includes('youtube')) Icon = <FaClock />;
+
+                              return Icon ? (
+                                <div
+                                  key={`${campaign._id}-platform-${i}`}
+                                  className="w-8 h-8 bg-white/80 backdrop-blur-md border border-gray-200 rounded-lg flex items-center justify-center shadow-sm"
+                                  title={platform}
+                                  style={{
+                                    backdropFilter: 'blur(8px)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)'
+                                  }}
+                                >
+                                  {Icon}
+                                </div>
+                              ) : (
+                                <span key={`${campaign._id}-platform-${i}`} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                                  {platform}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Deadline */}
+                      <div className="flex items-center gap-1.5 text-gray-500 text-sm">
                         <FaClock className="text-gray-400" />
-                        {daysLeft !== null ? `${daysLeft} days left` : 'No deadline'}
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500 text-xs">
-                        Posted {timeAgo}
+                        <span className="font-medium">
+                          {daysLeft !== null ? `${daysLeft} days left` : 'No deadline'}
+                        </span>
                       </div>
                     </div>
 
-                    {user?.role === 'creator' && (
-                      <Link
-                        to="/campaigns"
-                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2">
+                      {/* Save Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSave(campaign._id);
+                        }}
+                        className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0"
                       >
-                        <FaRocket />
-                        Apply Now
-                      </Link>
-                    )}
+                        <FaBookmark className={`text-lg ${isSaved ? 'text-green-600' : 'text-gray-400'}`} />
+                      </button>
+
+                      {/* Apply Now Button - HIGHLY CONTRASTING */}
+                      {user?.role === 'creator' && (
+                        <Link
+                          to={`/campaigns/${campaign._id}`}
+                          className="cta-pulse premium-button group/btn px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2 shadow-lg hover:shadow-2xl hover:scale-105"
+                          style={{
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(22, 163, 74, 0.2), 0 8px 16px rgba(22, 163, 74, 0.15)'
+                          }}
+                        >
+                          Apply Now
+                          <FaRocket className="group-hover/btn:translate-x-0.5 transition-transform" />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );

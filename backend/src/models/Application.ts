@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IApplication extends Document {
   campaignId: mongoose.Types.ObjectId;
   creatorId: mongoose.Types.ObjectId;
+  brandId: mongoose.Types.ObjectId; // Added to link application to the brand
   status: 'pending' | 'accepted' | 'rejected';
   coverLetter?: string;
   proposedPrice?: number;
@@ -14,9 +15,10 @@ const applicationSchema = new Schema<IApplication>(
   {
     campaignId: { type: Schema.Types.ObjectId, ref: 'Campaign', required: true, index: true },
     creatorId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    brandId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-    coverLetter: { type: String },
-    proposedPrice: { type: Number }
+    coverLetter: { type: String, trim: true, maxlength: 2000 },
+    proposedPrice: { type: Number, min: 0 },
   },
   {
     timestamps: true,

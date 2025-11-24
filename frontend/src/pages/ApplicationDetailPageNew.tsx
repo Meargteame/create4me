@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../lib/api';
-import DashboardLayout from '../components/DashboardLayout';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -11,12 +8,12 @@ import {
   FaClock,
   FaDollarSign,
   FaCalendarAlt,
-  FaUser,
-  FaEnvelope,
-  FaExternalLinkAlt,
-  FaFileAlt,
-  FaBuilding
+  FaBuilding,
+  FaFileAlt
 } from 'react-icons/fa';
+import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
+import DashboardLayout from '../components/DashboardLayout';
 import SuccessModal from '../components/SuccessModal';
 import ErrorModal from '../components/ErrorModal';
 
@@ -28,9 +25,8 @@ interface Application {
     description: string;
     budget?: number;
     deadline?: string;
-    userId: {
+    brandId: {
       name: string;
-      email: string;
     };
   };
   creatorId: {
@@ -39,9 +35,8 @@ interface Application {
     email: string;
   };
   status: 'pending' | 'accepted' | 'rejected';
-  proposedRate?: number;
+  proposedPrice?: number;
   coverLetter?: string;
-  portfolio?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -162,12 +157,16 @@ export default function ApplicationDetailPageNew() {
     <DashboardLayout>
       {showSuccess && (
         <SuccessModal
+          isOpen={showSuccess}
+          title="Success"
           message="Application status updated successfully!"
           onClose={() => setShowSuccess(false)}
         />
       )}
       {showError && (
         <ErrorModal
+          isOpen={showError}
+          title="Error"
           message={errorMessage}
           onClose={() => setShowError(false)}
         />
@@ -260,7 +259,7 @@ export default function ApplicationDetailPageNew() {
                     Brand
                   </div>
                   <p className="text-lg font-bold text-blue-900">
-                    {application.campaignId.userId.name}
+                    {application.campaignId.brandId.name}
                   </p>
                 </div>
               </div>
@@ -279,33 +278,6 @@ export default function ApplicationDetailPageNew() {
                   <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {application.coverLetter}
                   </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Portfolio */}
-            {application.portfolio && application.portfolio.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Portfolio Links</h2>
-                <div className="space-y-3">
-                  {application.portfolio.map((link, index) => (
-                    <a
-                      key={index}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group"
-                    >
-                      <FaExternalLinkAlt className="text-blue-600" />
-                      <span className="flex-1 text-gray-700 font-medium truncate">{link}</span>
-                      <FaArrowLeft className="text-gray-400 group-hover:text-blue-600 transform rotate-180 transition-colors" />
-                    </a>
-                  ))}
                 </div>
               </motion.div>
             )}
@@ -328,20 +300,20 @@ export default function ApplicationDetailPageNew() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{application.creatorId.name}</h3>
                   <p className="text-gray-600 text-sm flex items-center gap-1">
-                    <FaEnvelope className="text-xs" />
+                    <FaFileAlt className="text-xs" />
                     {application.creatorId.email}
                   </p>
                 </div>
               </div>
 
-              {application.proposedRate && (
+              {application.proposedPrice && (
                 <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
                   <p className="text-green-700 text-sm font-semibold mb-1 flex items-center gap-2">
                     <FaDollarSign />
                     Proposed Rate
                   </p>
                   <p className="text-3xl font-bold text-green-900">
-                    ${application.proposedRate.toLocaleString()}
+                    ${application.proposedPrice.toLocaleString()}
                   </p>
                 </div>
               )}

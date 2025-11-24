@@ -3,12 +3,11 @@ import { api } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { motion } from 'framer-motion';
-import { 
-  FaFileAlt, 
-  FaClock, 
-  FaCheckCircle, 
-  FaTimesCircle, 
-  FaExternalLinkAlt,
+import {
+  FaFileAlt,
+  FaClock,
+  FaCheckCircle,
+  FaTimesCircle,
   FaSearch,
   FaFilter,
   FaDollarSign,
@@ -18,21 +17,20 @@ import {
 
 interface Application {
   _id: string;
-  campaign: {
+  campaignId: {
     _id: string;
     title: string;
     budget: number;
     category: string;
   };
-  creator: {
+  creatorId: {
     _id: string;
     name: string;
     email: string;
   };
   status: 'pending' | 'accepted' | 'rejected';
   coverLetter: string;
-  proposedRate: number;
-  portfolioLink?: string;
+  proposedPrice: number;
   createdAt: string;
 }
 
@@ -62,7 +60,7 @@ export default function ApplicationsPageNew() {
 
   const filteredApplications = applications.filter(app => {
     const matchesFilter = filter === 'all' ? true : app.status === filter;
-    const matchesSearch = app.campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = app.campaignId.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          app.coverLetter.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
@@ -272,10 +270,10 @@ export default function ApplicationsPageNew() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {application.campaign.title}
+                          {application.campaignId.title}
                         </h3>
                         <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-lg">
-                          {application.campaign.category}
+                          {application.campaignId.category}
                         </span>
                       </div>
                       <p className="text-gray-700 text-sm line-clamp-2 mb-3">
@@ -296,24 +294,12 @@ export default function ApplicationsPageNew() {
                         <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                           <FaDollarSign className="text-green-600 text-sm" />
                         </div>
-                        ${application.proposedRate.toLocaleString()}
+                        ${application.proposedPrice.toLocaleString()}
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
                         <FaClock className="text-gray-400" />
                         Applied {timeAgo}
                       </div>
-                      {application.portfolioLink && (
-                        <a
-                          href={application.portfolioLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          <FaExternalLinkAlt className="text-sm" />
-                          Portfolio
-                        </a>
-                      )}
                     </div>
                     
                     <button

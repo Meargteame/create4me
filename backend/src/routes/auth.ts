@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { CreatorProfile } from '../models/CreatorProfile';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -9,7 +10,7 @@ const router = express.Router();
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name, role } = req.body;
-    
+
     if (!email || !password) {
       res.status(400).json({
         success: false,
@@ -17,7 +18,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     if (password.length < 8) {
       res.status(400).json({
         success: false,
@@ -25,7 +26,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       res.status(400).json({
@@ -34,22 +35,36 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     const user = new User({
       email,
       passwordHash: password,
       name,
       role: role || 'creator'
     });
-    
+
     await user.save();
-    
+
+    // Auto-create CreatorProfile if user is a creator
+    if (user.role === 'creator') {
+      const creatorProfile = new CreatorProfile({
+        userId: user._id,
+        displayName: name || 'Creator',
+        username: email.split('@')[0].toLowerCase() + Math.floor(Math.random() * 1000),
+        bio: `Hi, I'm ${name || 'a creator'}! I'm excited to collaborate with brands.`,
+        categories: [],
+        platforms: [],
+        socialLinks: {}
+      });
+      await creatorProfile.save();
+    }
+
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
-    
+
     res.status(201).json({
       success: true,
       message: 'Registration successful',
@@ -68,7 +83,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       res.status(400).json({
         success: false,
@@ -76,7 +91,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     const user = await User.findOne({ email });
     if (!user) {
       res.status(401).json({
@@ -85,7 +100,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       res.status(401).json({
@@ -94,13 +109,13 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    
+
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
-    
+
     res.json({
       success: true,
       message: 'Login successful',

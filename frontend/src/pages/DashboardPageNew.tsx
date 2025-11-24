@@ -161,7 +161,7 @@ export default function DashboardPageNew() {
                 : "Ready to find your next opportunity?"}
             </p>
           </div>
-          
+
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mb-24"></div>
@@ -175,24 +175,24 @@ export default function DashboardPageNew() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all border border-gray-100 hover:border-transparent"
+              className="group relative overflow-hidden bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all border border-white/50 hover:border-white/80"
             >
               {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-              
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
+
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white text-xl shadow-lg`}>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white text-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     {stat.icon}
                   </div>
-                  <div className="flex items-center gap-1 text-green-600 text-sm font-semibold">
+                  <div className="flex items-center gap-1 text-green-600 text-sm font-bold bg-green-50/50 px-2 py-1 rounded-lg backdrop-blur-sm">
                     <FaArrowUp className="text-xs" />
                     {stat.change}
                   </div>
                 </div>
-                
-                <h3 className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</h3>
-                <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
+
+                <h3 className="text-3xl font-black text-gray-900 mb-1 tracking-tight">{stat.value}</h3>
+                <p className="text-gray-600 text-sm font-semibold">{stat.label}</p>
               </div>
             </motion.div>
           ))}
@@ -203,96 +203,111 @@ export default function DashboardPageNew() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span className="w-1 h-8 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></span>
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isBrand ? (
               <>
                 <Link
                   to="/campaigns"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaRocket />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Create Campaign</h3>
-                    <p className="text-sm text-gray-600">Launch a new campaign</p>
+                    <h3 className="font-bold text-gray-900 text-lg">Create Campaign</h3>
+                    <p className="text-sm text-gray-600 font-medium">Launch a new campaign</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
 
                 <Link
                   to="/creators"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaUsers />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Find Creators</h3>
-                    <p className="text-sm text-gray-600">Browse verified creators</p>
+                    <h3 className="font-bold text-gray-900 text-lg">Find Creators</h3>
+                    <p className="text-sm text-gray-600 font-medium">Browse verified creators</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
 
                 <Link
                   to="/analytics"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaChartLine />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">View Analytics</h3>
-                    <p className="text-sm text-gray-600">Track performance</p>
+                    <h3 className="font-bold text-gray-900 text-lg">View Analytics</h3>
+                    <p className="text-sm text-gray-600 font-medium">Track performance</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-green-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
               </>
             ) : (
               <>
                 <Link
                   to="/feed"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaFire />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Browse Campaigns</h3>
-                    <p className="text-sm text-gray-600">Find opportunities</p>
+                    <h3 className="font-bold text-gray-900 text-lg">Browse Campaigns</h3>
+                    <p className="text-sm text-gray-600 font-medium">Find opportunities</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
 
                 <Link
                   to="/profile/edit"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaUsers />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Edit Profile</h3>
-                    <p className="text-sm text-gray-600">Update your portfolio</p>
+                    <h3 className="font-bold text-gray-900 text-lg">Edit Profile</h3>
+                    <p className="text-sm text-gray-600 font-medium">Update your portfolio</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
 
                 <Link
                   to="/applications"
-                  className="group flex items-center gap-4 p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:shadow-lg transition-all"
+                  className="group flex items-center gap-4 p-4 bg-white/50 hover:bg-white/80 border border-white/50 rounded-2xl hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 transition-transform">
                     <FaCheckCircle />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">My Applications</h3>
-                    <p className="text-sm text-gray-600">Track your progress</p>
+                    <h3 className="font-bold text-gray-900 text-lg">My Applications</h3>
+                    <p className="text-sm text-gray-600 font-medium">Track your progress</p>
                   </div>
-                  <FaArrowRight className="text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
+                    <FaArrowRight className="text-gray-400 group-hover:text-green-600 group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </Link>
               </>
             )}
@@ -306,15 +321,16 @@ export default function DashboardPageNew() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+            className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50"
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
                 {isBrand ? 'Recent Campaigns' : 'Hot Opportunities'}
               </h2>
               <Link
                 to={isBrand ? '/campaigns' : '/feed'}
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                className="text-blue-600 hover:text-blue-700 font-bold text-sm flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
                 View All
                 <FaArrowRight className="text-xs" />
@@ -329,17 +345,17 @@ export default function DashboardPageNew() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + index * 0.1 }}
-                    className="group p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all cursor-pointer"
+                    className="group p-4 bg-white/50 hover:bg-white border border-white/50 hover:border-blue-200 rounded-2xl transition-all cursor-pointer hover:shadow-md"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                        <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
                           {campaign.title}
                         </h3>
-                        <p className="text-sm text-gray-600 line-clamp-1">{campaign.description}</p>
+                        <p className="text-sm text-gray-600 line-clamp-1 font-medium">{campaign.description}</p>
                       </div>
                       {campaign.budget && (
-                        <span className="ml-4 px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-semibold">
+                        <span className="ml-4 px-3 py-1 bg-green-100/80 text-green-700 rounded-xl text-sm font-bold backdrop-blur-sm">
                           ${campaign.budget}
                         </span>
                       )}
@@ -347,8 +363,8 @@ export default function DashboardPageNew() {
                   </motion.div>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No campaigns yet</p>
+                <div className="text-center py-12 text-gray-500 bg-white/30 rounded-2xl border border-dashed border-gray-300">
+                  <p className="font-medium">No campaigns yet</p>
                 </div>
               )}
             </div>
@@ -360,13 +376,16 @@ export default function DashboardPageNew() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+              className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Recent Applications</h2>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+                  Recent Applications
+                </h2>
                 <Link
                   to="/applications"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                  className="text-purple-600 hover:text-purple-700 font-bold text-sm flex items-center gap-1 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
                 >
                   View All
                   <FaArrowRight className="text-xs" />
@@ -381,25 +400,24 @@ export default function DashboardPageNew() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.7 + index * 0.1 }}
-                      className="p-4 bg-gray-50 rounded-xl"
+                      className="p-4 bg-white/50 hover:bg-white border border-white/50 hover:border-purple-200 rounded-2xl transition-all hover:shadow-md"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">
+                          <h3 className="font-bold text-gray-900 mb-1">
                             {app.campaignId?.title || 'Campaign'}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 font-medium">
                             Applied {new Date(app.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         <span
-                          className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                            app.status === 'accepted'
+                          className={`px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wide ${app.status === 'accepted'
                               ? 'bg-green-100 text-green-700'
                               : app.status === 'rejected'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}
                         >
                           {app.status}
                         </span>
@@ -407,8 +425,8 @@ export default function DashboardPageNew() {
                     </motion.div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No applications yet</p>
+                  <div className="text-center py-12 text-gray-500 bg-white/30 rounded-2xl border border-dashed border-gray-300">
+                    <p className="font-medium">No applications yet</p>
                   </div>
                 )}
               </div>

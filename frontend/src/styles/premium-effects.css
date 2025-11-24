@@ -1,0 +1,295 @@
+/* Enhanced styles for Create4Me landing page premium effects */
+
+/* Ultra-slow background animations */
+@keyframes blob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(2px, -2px) scale(1.02);
+  }
+
+  66% {
+    transform: translate(-2px, 2px) scale(0.98);
+  }
+}
+
+.animate-blob {
+  animation: blob 60s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Enhanced Glassmorphism with inner shadow */
+.glass-enhanced {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
+    0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* 3D Tilt effect for feature cards */
+.card-3d-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  perspective: 1000px;
+}
+
+.card-3d-tilt:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateZ(10px);
+  box-shadow:
+    0 20px 40px -10px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Multi-layer shadow for dashboard preview */
+.multi-layer-shadow {
+  box-shadow:
+    /* Tight dark shadow */
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    /* Medium shadow with slight brand color */
+    0 10px 30px rgba(59, 130, 246, 0.08),
+    /* Large diffused shadow with brand color glow */
+    0 30px 60px rgba(59, 130, 246, 0.15),
+    /* Extra large for floating effect */
+    0 50px 100px -20px rgba(0, 0, 0, 0.12);
+}
+
+/* Pulsing glow effect for pricing tier */
+@keyframes pricing-glow {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+.pricing-pulse-glow {
+  animation: pricing-glow 3s ease-in-out infinite;
+  filter: blur(40px);
+}
+
+/* Smooth scroll reveal animations */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-reveal {
+  animation: slideInFromBottom 0.6s ease-out forwards;
+}
+
+/* Gradient text with subtle shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.gradient-shimmer {
+  background: linear-gradient(90deg,
+      #16a34a 0%,
+      #059669 25%,
+      #10b981 50%,
+      #059669 75%,
+      #16a34a 100%);
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Inner glow effect for premium cards */
+.inner-glow {
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Subtle grid animation */
+@keyframes gridShift {
+
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+
+  50% {
+    background-position: 1px 1px;
+  }
+}
+
+.animated-grid {
+  animation: gridShift 120s linear infinite;
+}
+
+/* Timeline connector line */
+.timeline-line {
+  position: relative;
+}
+
+.timeline-line::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom,
+      transparent,
+      rgba(59, 130, 246, 0.3) 20%,
+      rgba(59, 130, 246, 0.3) 80%,
+      transparent);
+  transform: translateX(-50%);
+}
+
+/* Progress indicator */
+.timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.timeline-dot.active {
+  background: #3b82f6;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.2),
+    0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Calculator result animation */
+@keyframes resultReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.result-reveal {
+  animation: resultReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Premium button with layered shadow */
+.premium-button {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(22, 163, 74, 0.2),
+    0 8px 16px rgba(22, 163, 74, 0.15);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(22, 163, 74, 0.25),
+    0 16px 32px rgba(22, 163, 74, 0.2);
+}
+
+/* Floating element animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Subtle pulse animation for CTA buttons */
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(22, 163, 74, 0.2),
+      0 8px 16px rgba(22, 163, 74, 0.15);
+  }
+
+  50% {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(22, 163, 74, 0.3),
+      0 8px 16px rgba(22, 163, 74, 0.25),
+      0 0 20px rgba(22, 163, 74, 0.15);
+  }
+}
+
+.cta-pulse {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+/* Sidebar highlight pulse - Gentle nudge for empty state */
+@keyframes sidebar-highlight {
+
+  0%,
+  100% {
+    background: rgba(22, 163, 74, 0.05);
+    box-shadow: inset 3px 0 0 rgba(22, 163, 74, 0.3);
+  }
+
+  50% {
+    background: rgba(22, 163, 74, 0.1);
+    box-shadow: inset 3px 0 0 rgba(22, 163, 74, 0.6);
+  }
+}
+
+.sidebar-highlight {
+  animation: sidebar-highlight 2s ease-in-out infinite;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .card-3d-tilt:hover {
+    transform: none;
+    /* Disable 3D effect on mobile */
+  }
+}

@@ -27,7 +27,7 @@ export default function ProfileEditorPageNew() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   const [profile, setProfile] = useState({
     bio: '',
     category: '',
@@ -42,6 +42,58 @@ export default function ProfileEditorPageNew() {
       facebook: ''
     }
   });
+
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Image size must be less than 5MB');
+      setShowError(true);
+      setTimeout(() => setShowError(false), 4000);
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please select an image file');
+      setShowError(true);
+      setTimeout(() => setShowError(false), 4000);
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to backend
+      const base64 = await new Promise<string>((resolve) => {
+        const fr = new FileReader();
+        fr.onloadend = () => resolve(fr.result as string);
+        fr.readAsDataURL(file);
+      });
+
+      await api.uploadImage(base64, 'avatar');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to upload avatar');
+      setShowError(true);
+      setTimeout(() => setShowError(false), 4000);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -101,17 +153,17 @@ export default function ProfileEditorPageNew() {
   const calculateCompletion = () => {
     let completed = 0;
     let total = 8;
-    
+
     if (profile.bio) completed++;
     if (profile.category) completed++;
     if (profile.platforms.length > 0) completed++;
     if (profile.followers) completed++;
     if (profile.engagementRate) completed++;
     if (profile.portfolio.length > 0) completed++;
-    if (profile.socialLinks.instagram || profile.socialLinks.youtube || 
-        profile.socialLinks.tiktok || profile.socialLinks.facebook) completed++;
+    if (profile.socialLinks.instagram || profile.socialLinks.youtube ||
+      profile.socialLinks.tiktok || profile.socialLinks.facebook) completed++;
     if (user?.name) completed++;
-    
+
     return Math.round((completed / total) * 100);
   };
 
@@ -125,7 +177,7 @@ export default function ProfileEditorPageNew() {
   ];
 
   const categories = [
-    'Fashion', 'Tech', 'Lifestyle', 'Food', 'Travel', 
+    'Fashion', 'Tech', 'Lifestyle', 'Food', 'Travel',
     'Fitness', 'Beauty', 'Gaming', 'Music', 'Education'
   ];
 
@@ -177,7 +229,7 @@ export default function ProfileEditorPageNew() {
               <div className="text-sm text-blue-100">Complete</div>
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="w-full bg-blue-400/30 rounded-full h-3 overflow-hidden">
             <motion.div
@@ -190,6 +242,61 @@ export default function ProfileEditorPageNew() {
         </motion.div>
 
         <form onSubmit={handleSave} className="space-y-6">
+          {/* Avatar Upload */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          >
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FaCamera className="text-pink-600" />
+              Profile Picture
+            </h2>
+
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {/* Avatar Preview */}
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center border-4 border-white shadow-lg">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <FaUser className="text-5xl text-gray-400" />
+                  )}
+                </div>
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Instructions */}
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="font-semibold text-gray-900 mb-2">Upload your profile photo</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload a professional photo to help brands recognize you. Max size: 5MB
+                </p>
+
+                <label className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+                  <FaCamera />
+                  {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                </label>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Basic Info */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -201,7 +308,7 @@ export default function ProfileEditorPageNew() {
               <FaUser className="text-blue-600" />
               Basic Information
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -245,18 +352,17 @@ export default function ProfileEditorPageNew() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Social Media Platforms
             </h2>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {platformOptions.map((platform) => (
                 <button
                   key={platform.id}
                   type="button"
                   onClick={() => togglePlatform(platform.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    profile.platforms.includes(platform.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all ${profile.platforms.includes(platform.id)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
                 >
                   <div className="text-3xl mb-2 flex justify-center">
                     {platform.icon}
@@ -312,7 +418,7 @@ export default function ProfileEditorPageNew() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Your Stats
             </h2>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -356,7 +462,7 @@ export default function ProfileEditorPageNew() {
               <FaCamera className="text-pink-600" />
               Portfolio Links
             </h2>
-            
+
             <div className="space-y-3">
               {profile.portfolio.map((link, index) => (
                 <div key={index} className="flex gap-2">
@@ -383,7 +489,7 @@ export default function ProfileEditorPageNew() {
                   </button>
                 </div>
               ))}
-              
+
               <button
                 type="button"
                 onClick={() => setProfile({ ...profile, portfolio: [...profile.portfolio, ''] })}

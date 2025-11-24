@@ -3,18 +3,19 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectDatabase, disconnectDatabase } from './config/database';
-import authRoutes from './routes/auth';
-import campaignRoutes from './routes/campaigns';
-import creatorRoutes from './routes/creators';
-import applicationRoutes from './routes/applications';
-import uploadRoutes from './routes/upload';
-import analyticsRoutes from './routes/analytics';
-import messageRoutes from './routes/messages';
+import authRouter from './routes/auth';
+import applicationsRouter from './routes/applications';
+import campaignsRouter from './routes/campaigns';
+import creatorsRouter from './routes/creators';
+import chatRouter from './routes/chat';
+import paymentsRouter from './routes/payments';
+import uploadRouter from './routes/upload';
+import analyticsRouter from './routes/analytics';
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
@@ -59,23 +60,16 @@ app.get(['/health', '/api/health'], (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/campaigns', campaignRoutes);
-app.use('/api/creators', creatorRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/auth', authRouter);
+app.use('/api/applications', applicationsRouter);
+app.use('/api/campaigns', campaignsRouter);
+app.use('/api/creators', creatorsRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/payments', paymentsRouter);
+app.use('/api/upload', uploadRouter);
+app.use('/api/analytics', analyticsRouter);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
-
-// Error handler
+// Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
