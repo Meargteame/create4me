@@ -11,10 +11,11 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200 shadow-sm glass-nav">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-xl font-bold bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 bg-clip-text text-transparent group-hover:from-red-700 group-hover:via-pink-700 group-hover:to-purple-700 transition-all">
-              Create4Me
+            <span className="text-2xl font-black tracking-tight text-gray-900">
+              Create4Me<span className="text-primary">.</span>
             </span>
           </Link>
 
@@ -24,7 +25,7 @@ export default function Header() {
               <Link 
                 to="/dashboard" 
                 className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-                  location.pathname === '/dashboard' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                  location.pathname === '/dashboard' ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 Dashboard
@@ -32,7 +33,7 @@ export default function Header() {
               <Link 
                 to="/feed" 
                 className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-                  location.pathname === '/feed' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                  location.pathname === '/feed' ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 Feed
@@ -40,7 +41,7 @@ export default function Header() {
               <Link 
                 to="/campaigns" 
                 className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-                  location.pathname === '/campaigns' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                  location.pathname === '/campaigns' ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 Campaigns
@@ -49,7 +50,7 @@ export default function Header() {
                 <Link 
                   to="/creators" 
                   className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-                    location.pathname === '/creators' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                    location.pathname === '/creators' ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   Creators
@@ -62,7 +63,7 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-onyx rounded-full flex items-center justify-center shadow-lg border border-gray-800">
                   <span className="text-white font-bold text-sm">
                     {user.name?.[0] || user.email[0].toUpperCase()}
                   </span>
@@ -84,7 +85,7 @@ export default function Header() {
                 </Link>
                 <Link 
                   to="/register" 
-                  className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 hover:shadow-lg hover:scale-105 transition-all"
+                  className="px-6 py-2.5 bg-primary text-white rounded-full text-sm font-bold hover:bg-red-700 hover:shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all"
                 >
                   Sign Up
                 </Link>

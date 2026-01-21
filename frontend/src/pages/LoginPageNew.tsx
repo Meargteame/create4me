@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
-import { FaEnvelope, FaLock, FaArrowRight, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowRight, FaCheckCircle, FaLock } from 'react-icons/fa';
 
 export default function LoginPageNew() {
   const [email, setEmail] = useState('');
@@ -18,8 +17,10 @@ export default function LoginPageNew() {
     setLoading(true);
 
     try {
+      // Example default role handling if the backend response doesn't include it directly in the top-level
+      // Modify based on actual API response structure
       const userData = await login(email.trim(), password);
-      // Redirect based on role
+      
       if (userData && 'role' in userData) {
         if (userData.role === 'brand') {
           navigate('/campaigns');
@@ -39,166 +40,85 @@ export default function LoginPageNew() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-50">
-      {/* Global Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:64px_64px]"></div>
-
-        {/* Gradient Orbs */}
-        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
-      </div>
-
-      <div className="w-full max-w-6xl mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center gap-12 md:gap-24">
-
-        {/* Left Side - Welcome Text (Hidden on mobile, visible on desktop) */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="hidden md:block flex-1"
-        >
-          <Link to="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <span className="text-white font-black text-xl">C4</span>
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Create4Me
-            </span>
+    <div className="min-h-screen grid lg:grid-cols-2 bg-white">
+      {/* Left Side - Form */}
+      <div className="flex flex-col justify-center px-12 sm:px-24 lg:px-32 relative z-10">
+          <Link to="/" className="absolute top-10 left-12 md:left-24 text-2xl font-black text-onyx tracking-tight">
+            C4<span className="text-primary">.</span>
           </Link>
 
-          <h1 className="text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight">
-            Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">Ethiopia's #1</span> Creator Platform.
-          </h1>
+          <div className="w-full max-w-sm mx-auto">
+              <h1 className="text-4xl font-black text-onyx mb-2">Welcome back</h1>
+              <p className="text-gray-500 mb-10">Enter your details to access your dashboard.</p>
 
-          <p className="text-xl text-gray-600 mb-10 leading-relaxed">
-            Sign in to manage your campaigns, connect with creators, and track your growth.
-          </p>
-
-          <div className="space-y-4">
-            {[
-              'Secure payments via Telebirr & Chapa',
-              'Real-time campaign analytics',
-              'Verified creator network'
-            ].map((feature, index) => (
-              <motion.div
-                key={feature}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                  <FaCheckCircle className="text-green-600" />
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100 flex items-center gap-2">
+                    <FaCheckCircle className="rotate-180" />
+                    {error}
                 </div>
-                <span className="text-gray-700 font-medium text-lg">{feature}</span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+              )}
 
-        {/* Right Side - Login Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full md:w-[480px]"
-        >
-          <div className="glass-enhanced rounded-3xl p-8 md:p-10 shadow-2xl border border-white/50 bg-white/60 backdrop-blur-xl">
-            <div className="mb-8 text-center md:text-left">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
-              <p className="text-gray-600">Enter your details to proceed</p>
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                {error}
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
-                  Email Address
-                </label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
-                    <FaEnvelope />
+              <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                      <input 
+                        type="email" 
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-gray-900"
+                        placeholder="hello@example.com"
+                      />
                   </div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-gray-900 placeholder-gray-400"
-                    placeholder="you@example.com"
-                    required
-                  />
-                </div>
-              </div>
+                  <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-bold text-gray-700">Password</label>
+                        <a href="#" className="text-xs font-bold text-primary hover:text-black transition-colors">Forgot Password?</a>
+                      </div>
+                      <input 
+                        type="password" 
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-gray-900"
+                        placeholder="••••••••"
+                      />
+                  </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2 ml-1">
-                  <label className="block text-sm font-bold text-gray-700">
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors"
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-4 bg-onyx text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all hover:scale-[1.01] shadow-xl shadow-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
-                    <FaLock />
-                  </div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-gray-900 placeholder-gray-400"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
+                    {loading ? 'Signing in...' : 'Sign In'}
+                    {!loading && <FaArrowRight />}
+                  </button>
+              </form>
+
+              <div className="mt-10 text-center">
+                  <p className="text-sm text-gray-500 font-medium">
+                      New to Create4Me? {' '}
+                      <Link to="/register" className="text-primary font-bold hover:text-black transition-colors">
+                          Create an account
+                      </Link>
+                  </p>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="group w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    Sign In
-                    <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-8 pt-8 border-t border-gray-200/60 text-center">
-              <p className="text-gray-600">
-                Don't have an account?{' '}
-                <Link
-                  to="/register"
-                  className="font-bold text-green-600 hover:text-green-700 transition-colors inline-flex items-center gap-1 group"
-                >
-                  Sign up for free
-                  <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </p>
-            </div>
           </div>
-        </motion.div>
+      </div>
+
+      {/* Right Side - Visual */}
+      <div className="hidden lg:flex bg-gray-50 relative overflow-hidden items-center justify-center p-20">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+          
+          <div className="relative z-10 max-w-lg text-center">
+              <div className="w-20 h-20 bg-primary rounded-2xl mx-auto mb-8 flex items-center justify-center text-white text-3xl shadow-2xl shadow-primary/30 rotate-3">
+                  <FaLock />
+              </div>
+              <h2 className="text-3xl font-bold text-onyx mb-4">Bank-Grade Security</h2>
+              <p className="text-gray-500 text-lg leading-relaxed">
+                  Your account is protected with 256-bit encryption. All payments are processed securely via Telebirr and Chapa.
+              </p>
+          </div>
       </div>
     </div>
   );

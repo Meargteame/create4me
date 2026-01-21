@@ -5,36 +5,38 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#f5f7ff',
-          100: '#ebf0ff',
-          200: '#d6e0ff',
-          300: '#b3c7ff',
-          400: '#8ca5ff',
-          500: '#667eea',
-          600: '#5568d3',
-          700: '#4451b8',
-          800: '#343b94',
-          900: '#282e75',
+            DEFAULT: '#FF2E00', // Signal Red / Aura Red
+            50: '#FFF1F0',
+            100: '#FFE4E1',
+            200: '#FFC9C2',
+            300: '#FFAFA3',
+            400: '#FF7B66',
+            500: '#FF2E00',
+            600: '#DB2600',
+            700: '#B81F00',
+            800: '#941900',
+            900: '#7A1400',
         },
-        secondary: {
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#764ba2',
-          600: '#6b3f92',
-          700: '#5f3482',
-          800: '#532972',
-          900: '#471e62',
-        },
+        'studio-white': '#FFFFFF',
+        'off-white': '#F9FAFB',
+        'onyx': '#111111',
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       animation: {
+        'glow-trace': 'glowTrace 2s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'shimmer': 'shimmer 2s infinite',
-        'gradient': 'gradient 15s ease infinite',
-        'scroll': 'scroll 40s linear infinite',
+      },
+      keyframes: {
+        glowTrace: {
+          '0%, 100%': { boxShadow: '0 0 5px rgba(255, 46, 0, 0.2), inset 0 0 5px rgba(255, 46, 0, 0.1)' },
+          '50%': { boxShadow: '0 0 20px rgba(255, 46, 0, 0.5), inset 0 0 10px rgba(255, 46, 0, 0.2)' },
+        },
+        float: {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-10px)' },
+        }
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

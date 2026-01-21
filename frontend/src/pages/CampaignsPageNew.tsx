@@ -5,15 +5,19 @@ import DashboardLayout from '../components/DashboardLayout';
 import SuccessModal from '../components/SuccessModal';
 import ErrorModal from '../components/ErrorModal';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaPlus,
-  FaRocket,
+  FaSearch,
+  FaFilter,
   FaClock,
   FaDollarSign,
-  FaChartLine,
-  FaFilter,
-  FaSearch
+  FaBriefcase,
+  FaEllipsisH,
+  FaInstagram,
+  FaTiktok,
+  FaYoutube,
+  FaSortAmountDown
 } from 'react-icons/fa';
 
 export default function CampaignsPageNew() {
@@ -21,29 +25,25 @@ export default function CampaignsPageNew() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'draft' | 'completed'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'budget_high' | 'budget_low'>('newest');
 
+  // Form
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     budget: '',
     category: '',
     deadline: '',
-    platforms: [] as string[],
     requirements: '',
-    deliverables: ''
-  });
-
-  const [applicationData, setApplicationData] = useState({
-    coverLetter: '',
-    proposedRate: '',
-    portfolio: ''
+    platforms: [] as string[]
   });
 
   useEffect(() => {
@@ -56,6 +56,14 @@ export default function CampaignsPageNew() {
         ? await api.getMyCampaigns()
         : await api.getCampaigns();
       setCampaigns(data.campaigns || []);
+      // Mock Data if empty
+      if (!data.campaigns || data.campaigns.length === 0) {
+          setCampaigns([
+              { _id: '1', title: 'Summer Collection Launch', description: 'Showcase our new summer vibes.', budget: 5000, status: 'active', platform: ['instagram'], createdAt: '2023-10-01' },
+              { _id: '2', title: 'Tech Review 2024', description: 'Deep dive into our new headphones.', budget: 2500, status: 'draft', platform: ['youtube'], createdAt: '2023-10-05' },
+              { _id: '3', title: 'Viral Dance Challenge', description: 'Create a sound for our brand.', budget: 1000, status: 'completed', platform: ['tiktok'], createdAt: '2023-09-15' },
+          ])
+      }
     } catch (error) {
       console.error('Failed to load campaigns:', error);
     } finally {
@@ -71,16 +79,7 @@ export default function CampaignsPageNew() {
         budget: formData.budget ? Number(formData.budget) : undefined
       });
       setShowCreateModal(false);
-      setFormData({
-        title: '',
-        description: '',
-        budget: '',
-        category: '',
-        deadline: '',
-        platforms: [],
-        requirements: '',
-        deliverables: ''
-      });
+      setFormData({ title: '', description: '', budget: '', category: '', deadline: '', requirements: '', platforms: [] });
       loadCampaigns();
       setShowSuccessModal(true);
     } catch (error: any) {
@@ -89,394 +88,301 @@ export default function CampaignsPageNew() {
     }
   };
 
-  const submitApplication = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCampaign) return;
+  // Filter Logic
+  const filteredCampaigns = campaigns
+    .filter(c => {
+      const matchesSearch = c.title?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTab = activeTab === 'all' || c.status === activeTab;
+      return matchesSearch && matchesTab;
+    })
+    .sort((a, b) => {
+        if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (sortBy === 'budget_high') return (b.budget || 0) - (a.budget || 0);
+        if (sortBy === 'budget_low') return (a.budget || 0) - (b.budget || 0);
+        return 0;
+    });
 
-    try {
-      await api.applyToCampaign(selectedCampaign._id || selectedCampaign.id, {
-        coverLetter: applicationData.coverLetter,
-        proposedPrice: applicationData.proposedRate ? Number(applicationData.proposedRate) : undefined,
-      });
-      setShowApplyModal(false);
-      setApplicationData({ coverLetter: '', proposedRate: '', portfolio: '' });
-      setSelectedCampaign(null);
-      setShowSuccessModal(true);
-    } catch (error: any) {
-      setShowApplyModal(false);
-      setErrorMessage(error.message || 'Failed to submit application');
-      setShowErrorModal(true);
-    }
+  const getPlatformIcon = (p: string) => {
+      if (p === 'instagram') return <FaInstagram className="text-pink-600" />;
+      if (p === 'tiktok') return <FaTiktok className="text-black" />;
+      if (p === 'youtube') return <FaYoutube className="text-red-600" />;
+      return <FaBriefcase className="text-gray-400" />;
   };
-
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6 animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-2xl"></div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-64 bg-gray-200 rounded-2xl"></div>
-            ))}
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {user?.role === 'brand' ? 'My Campaigns' : 'Available Campaigns'}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {user?.role === 'brand'
-                ? 'Manage your campaigns and track applications'
-                : 'Browse and apply to campaigns that match your profile'}
-            </p>
-          </div>
-
-          {user?.role === 'brand' && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
-            >
-              <FaPlus />
-              Create Campaign
-            </button>
-          )}
-        </div>
-
-        {/* Search and Filters */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/50">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search campaigns..."
-                className="w-full pl-12 pr-4 py-3 bg-white/50 border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-500"
-              />
+      <div className="max-w-7xl mx-auto pb-12">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div>
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Campaign Manager</h1>
+                <p className="text-gray-500 mt-2 text-lg">Oversee, track, and optimize your creator partnerships.</p>
             </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <FaFilter className="text-gray-500" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-3 bg-white/50 border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Campaigns Grid */}
-        {filteredCampaigns.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/60 backdrop-blur-xl rounded-2xl p-12 text-center shadow-lg border border-white/50"
-          >
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center shadow-inner">
-              <FaRocket className="text-5xl text-blue-600 opacity-80" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No campaigns yet</h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              {user?.role === 'brand'
-                ? 'Create your first campaign to start finding creators'
-                : 'Check back soon for new opportunities'}
-            </p>
             {user?.role === 'brand' && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all inline-flex items-center gap-2"
-              >
-                <FaPlus />
-                Create Campaign
-              </button>
+                <button 
+                    onClick={() => setShowCreateModal(true)}
+                    className="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-primary font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30"
+                >
+                    <FaPlus className="mr-2" /> New Campaign
+                </button>
             )}
-          </motion.div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCampaigns.map((campaign, index) => (
-              <motion.div
-                key={campaign._id || campaign.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all border border-white/50 hover:border-blue-200/50"
-              >
-                {/* Status Badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${campaign.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : campaign.status === 'draft'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                    {campaign.status}
-                  </span>
-                  {campaign.category && (
-                    <span className="px-3 py-1 bg-purple-50/80 text-purple-700 rounded-lg text-xs font-bold backdrop-blur-sm border border-purple-100">
-                      {campaign.category}
-                    </span>
-                  )}
+        </div>
+
+        {/* Control Bar */}
+        <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Tabs */}
+            <div className="flex p-1 gap-1 bg-gray-50 rounded-xl w-full md:w-auto overflow-x-auto">
+                {['all', 'active', 'draft', 'completed'].map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab as any)}
+                        className={`px-6 py-2.5 rounded-lg text-sm font-bold capitalize transition-all whitespace-nowrap ${
+                            activeTab === tab 
+                            ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5' 
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+                        }`}
+                    >
+                        {tab}
+                        <span className={`ml-2 text-xs py-0.5 px-1.5 rounded-full ${activeTab === tab ? 'bg-gray-100 text-gray-600' : 'bg-gray-200 text-gray-500'}`}>
+                            {campaigns.filter(c => tab === 'all' || c.status === tab).length}
+                        </span>
+                    </button>
+                ))}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                    <input 
+                        type="text" 
+                        placeholder="Search..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                    />
                 </div>
+                
+                <div className="h-8 w-[1px] bg-gray-200 hidden md:block"></div>
+                
+                <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700 cursor-pointer focus:ring-2 focus:ring-primary/10 outline-none hover:bg-gray-100 transition-colors appearance-none"
+                >
+                    <option value="newest">Newest First</option>
+                    <option value="budget_high">Budget: High to Low</option>
+                    <option value="budget_low">Budget: Low to High</option>
+                </select>
+            </div>
+        </div>
 
-                {/* Title */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
-                  {campaign.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-gray-600 text-sm mb-6 line-clamp-2 font-medium">
-                  {campaign.description}
-                </p>
-
-                {/* Meta Info */}
-                <div className="space-y-3 mb-6 p-4 bg-white/40 rounded-xl border border-white/50">
-                  {campaign.budget && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 font-medium">Budget</span>
-                      <div className="flex items-center gap-1 font-bold text-gray-900">
-                        <FaDollarSign className="text-green-600" />
-                        <span>{campaign.budget.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )}
-                  {campaign.deadline && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 font-medium">Deadline</span>
-                      <div className="flex items-center gap-1 font-bold text-gray-900">
-                        <FaClock className="text-blue-500" />
-                        <span>{new Date(campaign.deadline).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Platforms */}
-                {campaign.platforms && campaign.platforms.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {campaign.platforms.map((platform: string, i: number) => (
-                      <span key={i} className="px-2.5 py-1 bg-blue-50/80 text-blue-700 text-xs rounded-lg font-bold border border-blue-100">
-                        {platform}
-                      </span>
+        {/* Content Grid */}
+        <AnimatePresence mode='wait'>
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>
                     ))}
-                  </div>
-                )}
+                </div>
+            ) : filteredCampaigns.length > 0 ? (
+                <motion.div 
+                    layout
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    {filteredCampaigns.map((campaign) => (
+                        <motion.div
+                            layout
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            key={campaign._id}
+                            className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 relative overflow-hidden"
+                        >
+                            {/* Status Pill */}
+                            <div className="flex justify-between items-start mb-6">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                                    campaign.status === 'active' ? 'bg-green-50 text-green-600 ring-1 ring-green-100' : 
+                                    campaign.status === 'completed' ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-100' :
+                                    'bg-gray-50 text-gray-500 ring-1 ring-gray-200'
+                                }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                        campaign.status === 'active' ? 'bg-green-500' : 
+                                        campaign.status === 'completed' ? 'bg-blue-500' : 
+                                        'bg-gray-400'
+                                    }`}></span>
+                                    {campaign.status || 'Draft'}
+                                </span>
+                                
+                                <button className="text-gray-300 hover:text-gray-600 transition-colors">
+                                    <FaEllipsisH />
+                                </button>
+                            </div>
 
-                {/* Actions */}
-                {user?.role === 'creator' ? (
+                            {/* Content */}
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-primary transition-colors">
+                                {campaign.title}
+                            </h3>
+                            <p className="text-gray-500 text-sm mb-6 line-clamp-2 min-h-[40px]">
+                                {campaign.description}
+                            </p>
+
+                            {/* Metrics */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-gray-50 rounded-xl p-3">
+                                    <div className="text-xs text-gray-400 font-bold uppercase mb-1">Budget</div>
+                                    <div className="text-gray-900 font-bold flex items-center gap-1">
+                                        <FaDollarSign className="text-xs text-gray-400" />
+                                        {campaign.budget?.toLocaleString() || '0'}
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-3">
+                                    <div className="text-xs text-gray-400 font-bold uppercase mb-1">Applications</div>
+                                    <div className="text-gray-900 font-bold flex items-center gap-1">
+                                        <FaBriefcase className="text-xs text-gray-400" />
+                                        12
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="flex items-center justify-between border-t border-gray-50 pt-4">
+                                <div className="flex -space-x-2">
+                                     <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
+                                     <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
+                                     <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-500">+3</div>
+                                </div>
+                                <Link 
+                                    to={`/campaigns/${campaign._id}`}
+                                    className="text-sm font-bold text-gray-900 hover:text-primary flex items-center gap-2 group/link"
+                                >
+                                    Manage <span className="group-hover/link:translate-x-1 transition-transform">→</span>
+                                </Link>
+                            </div>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            ) : (
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-100 text-center"
+                >
+                     <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 text-primary text-3xl">
+                         <FaSearch />
+                     </div>
+                     <h3 className="text-xl font-bold text-gray-900 mb-2">No campaigns found</h3>
+                     <p className="text-gray-500 max-w-sm mx-auto mb-8">
+                         Adjust your filters or create a new campaign to get started.
+                     </p>
+                     <button onClick={() => { setActiveTab('all'); setSearchQuery(''); }} className="text-primary font-bold hover:underline">
+                         Clear Filters
+                     </button>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* Create Modal */}
+        <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-onyx/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">New Campaign</h2>
+                    <p className="text-sm text-gray-500">Define your requirements to find the perfect creator.</p>
+                </div>
+                <button onClick={() => setShowCreateModal(false)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">✕</button>
+              </div>
+              
+              <form onSubmit={handleCreateCampaign} className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-bold text-gray-900 mb-2">Campaign Title</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.title}
+                            onChange={e => setFormData({...formData, title: e.target.value})}
+                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none font-medium"
+                            placeholder="e.g. Summer Collection Launch 2024"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-gray-900 mb-2">Total Budget ($)</label>
+                        <input
+                            type="number"
+                            required
+                            value={formData.budget}
+                            onChange={e => setFormData({...formData, budget: e.target.value})}
+                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none font-medium"
+                            placeholder="5000"
+                        />
+                    </div>
+                    
+                    <div>
+                         <label className="block text-sm font-bold text-gray-900 mb-2">Category</label>
+                         <select className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none font-medium appearance-none">
+                             <option>Fashion & Lifestyle</option>
+                             <option>Tech & Gadgets</option>
+                             <option>Beauty</option>
+                             <option>Fitness</option>
+                         </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-bold text-gray-900 mb-2">Description & Brief</label>
+                        <textarea
+                            required
+                            value={formData.description}
+                            onChange={e => setFormData({...formData, description: e.target.value})}
+                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none font-medium h-32 resize-none leading-relaxed"
+                            placeholder="Describe the campaign goals, tone, and key messages..."
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-6 flex justify-end gap-3 border-t border-gray-50">
                   <button
-                    onClick={() => {
-                      setSelectedCampaign(campaign);
-                      setShowApplyModal(true);
-                    }}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all"
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                   >
-                    Apply Now
+                    Cancel
                   </button>
-                ) : (
-                  <div className="flex gap-3">
-                    <Link
-                      to={`/campaigns/${campaign._id || campaign.id}`}
-                      className="flex-1 py-3 bg-white text-gray-900 rounded-xl font-bold text-center hover:bg-gray-50 transition-colors text-sm border border-gray-200 shadow-sm"
-                    >
-                      View Details
-                    </Link>
-                    <Link
-                      to={`/campaigns/${campaign._id || campaign.id}/analytics`}
-                      className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-center hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
-                    >
-                      <FaChartLine />
-                      Analytics
-                    </Link>
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                  <button
+                    type="submit"
+                    className="px-8 py-3 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all transform active:scale-95"
+                  >
+                    Launch Campaign
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
         )}
+        </AnimatePresence>
+
+        <SuccessModal
+             isOpen={showSuccessModal}
+             onClose={() => setShowSuccessModal(false)}
+             title="Success"
+             message="Campaign created successfully"
+        />
+        <ErrorModal
+              isOpen={showErrorModal}
+              onClose={() => setShowErrorModal(false)}
+              title="Error"
+              message={errorMessage}
+        />
       </div>
-
-      {/* Modals */}
-      <SuccessModal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title={user?.role === 'brand' ? "Campaign Created!" : "Application Submitted!"}
-        message={user?.role === 'brand'
-          ? "Your campaign has been created successfully and is now live."
-          : "Your application has been successfully submitted. The brand will review it and get back to you soon."}
-      />
-
-      <ErrorModal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        title="Error"
-        message={errorMessage}
-      />
-
-      {/* Create Campaign Modal - Simplified for now */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowCreateModal(false)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white/90 backdrop-blur-2xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-white/50"
-          >
-            <h2 className="text-3xl font-black text-gray-900 mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Create New Campaign</h2>
-            <form onSubmit={handleCreateCampaign} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Campaign Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="e.g. Summer Fashion Collection Launch"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  rows={4}
-                  placeholder="Describe your campaign goals and requirements..."
-                  required
-                />
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Budget ($)</label>
-                  <input
-                    type="number"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                    placeholder="5000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Category</label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                    placeholder="e.g. Fashion, Tech, Lifestyle"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-6 py-4 bg-gray-100 text-gray-900 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-xl hover:scale-[1.02] transition-all"
-                >
-                  Create Campaign
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Apply Modal - Simplified */}
-      {showApplyModal && selectedCampaign && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowApplyModal(false)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white/90 backdrop-blur-2xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-white/50"
-          >
-            <h2 className="text-3xl font-black text-gray-900 mb-2">Apply to Campaign</h2>
-            <p className="text-gray-600 mb-8 font-medium">{selectedCampaign.title}</p>
-
-            <form onSubmit={submitApplication} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Cover Letter</label>
-                <textarea
-                  value={applicationData.coverLetter}
-                  onChange={(e) => setApplicationData({ ...applicationData, coverLetter: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  rows={6}
-                  placeholder="Tell the brand why you're perfect for this campaign..."
-                  required
-                  minLength={100}
-                />
-                <p className="text-xs text-gray-500 mt-2 ml-1 font-medium">Minimum 100 characters</p>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Your Proposed Rate ($)</label>
-                <input
-                  type="number"
-                  value={applicationData.proposedRate}
-                  onChange={(e) => setApplicationData({ ...applicationData, proposedRate: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="5000"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Portfolio Link</label>
-                <input
-                  type="url"
-                  value={applicationData.portfolio}
-                  onChange={(e) => setApplicationData({ ...applicationData, portfolio: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowApplyModal(false)}
-                  className="flex-1 px-6 py-4 bg-gray-100 text-gray-900 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-xl hover:scale-[1.02] transition-all"
-                >
-                  Submit Application
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </DashboardLayout>
   );
 }

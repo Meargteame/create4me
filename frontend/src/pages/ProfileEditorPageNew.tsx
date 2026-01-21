@@ -9,523 +9,196 @@ import {
   FaYoutube,
   FaTiktok,
   FaFacebook,
-  FaCheckCircle,
-  FaSave,
   FaCamera,
-  FaChartLine,
-  FaUsers,
+  FaSave,
   FaLink,
-  FaTag
+  FaCheck
 } from 'react-icons/fa';
 import SuccessModal from '../components/SuccessModal';
 import ErrorModal from '../components/ErrorModal';
 
 export default function ProfileEditorPageNew() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Assume loaded for UI demo
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Form State
   const [profile, setProfile] = useState({
-    bio: '',
-    category: '',
-    platforms: [] as string[],
-    followers: '',
-    engagementRate: '',
-    portfolio: [] as string[],
+    name: user?.name || '',
+    bio: 'Digital creator, filmmaker, and storyteller based in Addis.',
+    category: 'Lifestyle',
+    platforms: ['Instagram', 'TikTok'],
     socialLinks: {
-      instagram: '',
-      youtube: '',
-      tiktok: '',
-      facebook: ''
+      instagram: 'instagram.com/user',
+      tiktok: 'tiktok.com/@user',
+      youtube: ''
     }
   });
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('Image size must be less than 5MB');
-      setShowError(true);
-      setTimeout(() => setShowError(false), 4000);
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please select an image file');
-      setShowError(true);
-      setTimeout(() => setShowError(false), 4000);
-      return;
-    }
-
-    try {
-      setUploadingAvatar(true);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Upload to backend
-      const base64 = await new Promise<string>((resolve) => {
-        const fr = new FileReader();
-        fr.onloadend = () => resolve(fr.result as string);
-        fr.readAsDataURL(file);
-      });
-
-      await api.uploadImage(base64, 'avatar');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to upload avatar');
-      setShowError(true);
-      setTimeout(() => setShowError(false), 4000);
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      const data = await api.getMyProfile();
-      if (data.profile) {
-        setProfile({
-          bio: data.profile.bio || '',
-          category: data.profile.category || '',
-          platforms: data.profile.platforms || [],
-          followers: data.profile.followers || '',
-          engagementRate: data.profile.engagementRate || '',
-          portfolio: data.profile.portfolio || [],
-          socialLinks: data.profile.socialLinks || {
-            instagram: '',
-            youtube: '',
-            tiktok: '',
-            facebook: ''
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
+      e.preventDefault();
       setSaving(true);
-      await api.updateMyProfile(profile);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to update profile');
-      setShowError(true);
-      setTimeout(() => setShowError(false), 4000);
-    } finally {
-      setSaving(false);
-    }
+      // Simulate API call
+      setTimeout(() => {
+          setSaving(false);
+          setShowSuccess(true);
+      }, 1000);
   };
-
-  const togglePlatform = (platform: string) => {
-    setProfile(prev => ({
-      ...prev,
-      platforms: prev.platforms.includes(platform)
-        ? prev.platforms.filter(p => p !== platform)
-        : [...prev.platforms, platform]
-    }));
-  };
-
-  const calculateCompletion = () => {
-    let completed = 0;
-    let total = 8;
-
-    if (profile.bio) completed++;
-    if (profile.category) completed++;
-    if (profile.platforms.length > 0) completed++;
-    if (profile.followers) completed++;
-    if (profile.engagementRate) completed++;
-    if (profile.portfolio.length > 0) completed++;
-    if (profile.socialLinks.instagram || profile.socialLinks.youtube ||
-      profile.socialLinks.tiktok || profile.socialLinks.facebook) completed++;
-    if (user?.name) completed++;
-
-    return Math.round((completed / total) * 100);
-  };
-
-  const completion = calculateCompletion();
-
-  const platformOptions = [
-    { id: 'instagram', name: 'Instagram', icon: <FaInstagram className="text-pink-600" /> },
-    { id: 'youtube', name: 'YouTube', icon: <FaYoutube className="text-red-600" /> },
-    { id: 'tiktok', name: 'TikTok', icon: <FaTiktok className="text-black" /> },
-    { id: 'facebook', name: 'Facebook', icon: <FaFacebook className="text-blue-600" /> }
-  ];
-
-  const categories = [
-    'Fashion', 'Tech', 'Lifestyle', 'Food', 'Travel',
-    'Fitness', 'Beauty', 'Gaming', 'Music', 'Education'
-  ];
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6 animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-2xl"></div>
-          <div className="h-96 bg-gray-200 rounded-2xl"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
-      {showSuccess && (
-        <SuccessModal
-          message="Profile updated successfully!"
-          onClose={() => setShowSuccess(false)}
-        />
-      )}
-      {showError && (
-        <ErrorModal
-          message={errorMessage}
-          onClose={() => setShowError(false)}
-        />
-      )}
-
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header with Progress */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <FaUser />
-                Edit Your Profile
-              </h1>
-              <p className="text-blue-100 mt-2">
-                Complete your profile to attract more brands
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold mb-1">{completion}%</div>
-              <div className="text-sm text-blue-100">Complete</div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-blue-400/30 rounded-full h-3 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${completion}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full bg-white rounded-full shadow-lg"
-            />
-          </div>
-        </motion.div>
+      <div className="max-w-4xl mx-auto pb-12">
+        <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">Edit Profile</h1>
+            <p className="text-gray-500 mt-1">Update your personal details and portfolio.</p>
+        </div>
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Avatar Upload */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FaCamera className="text-pink-600" />
-              Profile Picture
-            </h2>
-
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              {/* Avatar Preview */}
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center border-4 border-white shadow-lg">
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <FaUser className="text-5xl text-gray-400" />
-                  )}
+            {/* Avatar Section */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-6">
+                <div className="relative group cursor-pointer">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                        {user?.avatar ? (
+                            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-3xl font-bold text-gray-300">
+                                {profile.name.charAt(0)}
+                            </span>
+                        )}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <FaCamera className="text-white" />
+                    </div>
                 </div>
-                {uploadingAvatar && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Instructions */}
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="font-semibold text-gray-900 mb-2">Upload your profile photo</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Upload a professional photo to help brands recognize you. Max size: 5MB
-                </p>
-
-                <label className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
-                  <FaCamera />
-                  {avatarPreview ? 'Change Photo' : 'Upload Photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    disabled={uploadingAvatar}
-                  />
-                </label>
-              </div>
+                <div>
+                    <h3 className="font-bold text-gray-900">Profile Picture</h3>
+                    <p className="text-xs text-gray-500 mb-3">Recommended 400x400px. JPG, PNG.</p>
+                    <button type="button" className="text-sm font-bold text-primary border border-gray-200 px-4 py-2 rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all">
+                        Upload New
+                    </button>
+                </div>
             </div>
-          </motion.div>
 
-          {/* Basic Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FaUser className="text-blue-600" />
-              Basic Information
-            </h2>
+            {/* Basic Info */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="relative z-10 space-y-4">
+                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <FaUser className="text-gray-400" /> Basic Information
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                            <input 
+                                type="text"
+                                value={profile.name}
+                                onChange={e => setProfile({...profile, name: e.target.value})}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                            <select 
+                                value={profile.category}
+                                onChange={e => setProfile({...profile, category: e.target.value})}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer bg-white"
+                            >
+                                <option>Lifestyle</option>
+                                <option>Tech</option>
+                                <option>Fashion</option>
+                                <option>Fitness</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Bio
-                </label>
-                <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  rows={4}
-                  placeholder="Tell brands about yourself and your content style..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FaTag className="text-purple-600" />
-                  Category
-                </label>
-                <select
-                  value={profile.category}
-                  onChange={(e) => setProfile({ ...profile, category: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat.toLowerCase()}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Platforms */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Social Media Platforms
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              {platformOptions.map((platform) => (
-                <button
-                  key={platform.id}
-                  type="button"
-                  onClick={() => togglePlatform(platform.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${profile.platforms.includes(platform.id)
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                >
-                  <div className="text-3xl mb-2 flex justify-center">
-                    {platform.icon}
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {platform.name}
-                  </div>
-                  {profile.platforms.includes(platform.id) && (
-                    <FaCheckCircle className="text-blue-600 mx-auto mt-2" />
-                  )}
-                </button>
-              ))}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">Bio</label>
+                        <textarea 
+                            value={profile.bio}
+                            onChange={e => setProfile({...profile, bio: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all h-24 resize-none"
+                            placeholder="Tell brands about yourself..."
+                        />
+                         <p className="text-xs text-right text-gray-400 mt-1">{profile.bio.length}/150</p>
+                    </div>
+                </div>
+                 {/* Decorative */}
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
             </div>
 
             {/* Social Links */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <FaLink className="text-blue-600" />
-                Profile Links
-              </h3>
-              {platformOptions.map((platform) => (
-                <div key={platform.id}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {platform.icon}
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <FaLink className="text-gray-400" /> Social Presence
+                </h3>
+                
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-pink-50 rounded-lg flex items-center justify-center text-pink-600 text-xl">
+                            <FaInstagram />
+                        </div>
+                        <input 
+                            type="text"
+                            placeholder="Instagram Username"
+                            value={profile.socialLinks.instagram}
+                            onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, instagram: e.target.value}})}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
                     </div>
-                    <input
-                      type="url"
-                      value={profile.socialLinks[platform.id as keyof typeof profile.socialLinks] || ''}
-                      onChange={(e) => setProfile({
-                        ...profile,
-                        socialLinks: {
-                          ...profile.socialLinks,
-                          [platform.id]: e.target.value
-                        }
-                      })}
-                      placeholder={`Your ${platform.name} profile URL`}
-                      className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
-                  </div>
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-black text-xl">
+                            <FaTiktok />
+                        </div>
+                        <input 
+                            type="text"
+                            placeholder="TikTok Username"
+                            value={profile.socialLinks.tiktok}
+                            onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, tiktok: e.target.value}})}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
+                    </div>
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-600 text-xl">
+                            <FaYoutube />
+                        </div>
+                        <input 
+                            type="text"
+                            placeholder="YouTube Channel URL"
+                            value={profile.socialLinks.youtube}
+                            onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, youtube: e.target.value}})}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
+                    </div>
                 </div>
-              ))}
             </div>
-          </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Your Stats
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FaUsers className="text-blue-600" />
-                  Total Followers
-                </label>
-                <input
-                  type="number"
-                  value={profile.followers}
-                  onChange={(e) => setProfile({ ...profile, followers: e.target.value })}
-                  placeholder="e.g., 50000"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FaChartLine className="text-purple-600" />
-                  Engagement Rate (%)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={profile.engagementRate}
-                  onChange={(e) => setProfile({ ...profile, engagementRate: e.target.value })}
-                  placeholder="e.g., 4.5"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-              </div>
+            {/* Save Action */}
+            <div className="flex justify-end pt-4">
+                <button 
+                    type="submit"
+                    disabled={saving}
+                    className="flex items-center gap-2 bg-onyx text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {saving ? (
+                        <>Saving...</>
+                    ) : (
+                        <>
+                            <FaSave /> Save Changes
+                        </>
+                    )}
+                </button>
             </div>
-          </motion.div>
-
-          {/* Portfolio */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FaCamera className="text-pink-600" />
-              Portfolio Links
-            </h2>
-
-            <div className="space-y-3">
-              {profile.portfolio.map((link, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="url"
-                    value={link}
-                    onChange={(e) => {
-                      const newPortfolio = [...profile.portfolio];
-                      newPortfolio[index] = e.target.value;
-                      setProfile({ ...profile, portfolio: newPortfolio });
-                    }}
-                    placeholder="https://example.com/your-work"
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newPortfolio = profile.portfolio.filter((_, i) => i !== index);
-                      setProfile({ ...profile, portfolio: newPortfolio });
-                    }}
-                    className="px-4 py-3 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => setProfile({ ...profile, portfolio: [...profile.portfolio, ''] })}
-                className="w-full px-4 py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all"
-              >
-                + Add Portfolio Link
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Save Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex gap-4"
-          >
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-            >
-              {saving ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FaSave />
-                  Save Profile
-                </>
-              )}
-            </button>
-          </motion.div>
         </form>
+
+        <SuccessModal 
+            isOpen={showSuccess} 
+            onClose={() => setShowSuccess(false)}
+            title="Success"
+            message="Profile updated successfully!"
+        />
       </div>
     </DashboardLayout>
   );

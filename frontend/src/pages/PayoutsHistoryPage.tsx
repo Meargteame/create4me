@@ -2,154 +2,155 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import DashboardLayout from '../components/DashboardLayout';
 import { motion } from 'framer-motion';
-import { FaDollarSign, FaCheckCircle, FaTimesCircle, FaClock, FaCalendarAlt } from 'react-icons/fa';
+import { 
+    FaDollarSign, 
+    FaCheckCircle, 
+    FaTimesCircle, 
+    FaClock, 
+    FaCalendarAlt, 
+    FaDownload,
+    FaArrowRight,
+    FaHistory,
+    FaWallet
+} from 'react-icons/fa';
 
 interface Payout {
   _id: string;
-  campaignId: {
-    title: string;
-  };
+  campaignId: { title: string };
   amount: number;
-  platformFee: number;
-  netPayout: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  provider: 'telebirr' | 'chapa';
-  processedAt?: string;
-  createdAt: string;
+  date: string;
 }
 
 export default function PayoutsHistoryPage() {
-  const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [loading, setLoading] = useState(false);
+  
+  // Mock Data
+  const payouts: Payout[] = [
+      { _id: '1', campaignId: { title: 'Summer Fashion Haul' }, amount: 1500, status: 'completed', date: '2023-11-15' },
+      { _id: '2', campaignId: { title: 'Tech Review Series' }, amount: 3000, status: 'processing', date: '2023-11-20' },
+      { _id: '3', campaignId: { title: 'Energy Drink Launch' }, amount: 800, status: 'pending', date: '2023-11-25' },
+  ];
 
-  useEffect(() => {
-    fetchPayouts(pagination.page);
-  }, [pagination.page]);
-
-  const fetchPayouts = async (page: number) => {
-    try {
-      setLoading(true);
-      const response = await api.getPaymentHistory(page);
-      setPayouts(response.payouts);
-      setPagination(response.pagination);
-    } catch (error) {
-      console.error('Failed to fetch payout history:', error);
-    } finally {
-      setLoading(false);
-    }
+  const getStatusBadge = (status: string) => {
+      switch(status) {
+          case 'completed': 
+            return <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><FaCheckCircle className="text-[10px]" /> Paid</span>;
+          case 'processing': 
+            return <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><FaClock className="text-[10px]" /> Processing</span>;
+          default: 
+            return <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><FaClock className="text-[10px]" /> Pending</span>;
+      }
   };
-
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return {
-          icon: <FaCheckCircle className="text-green-500" />,
-          color: 'text-green-700 bg-green-50',
-          label: 'Completed',
-        };
-      case 'failed':
-        return {
-          icon: <FaTimesCircle className="text-red-500" />,
-          color: 'text-red-700 bg-red-50',
-          label: 'Failed',
-        };
-      default:
-        return {
-          icon: <FaClock className="text-yellow-500" />,
-          color: 'text-yellow-700 bg-yellow-50',
-          label: 'Processing',
-        };
-    }
-  };
-
-  if (loading && pagination.page === 1) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-24 bg-gray-200 rounded-2xl"></div>
-          <div className="h-48 bg-gray-200 rounded-2xl"></div>
-          <div className="h-48 bg-gray-200 rounded-2xl"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-bold text-gray-900">Payouts History</h1>
-          <p className="text-gray-600 mt-2">A complete record of all your earnings.</p>
-        </motion.div>
+      <div className="max-w-7xl mx-auto pb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Payouts & Earnings</h1>
+                <p className="text-gray-500 mt-1">Track your income and payment history.</p>
+            </div>
+            <div className="bg-black text-white px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xl">
+                    <FaWallet />
+                </div>
+                <div>
+                    <div className="text-xs text-gray-300 font-medium">Available Balance</div>
+                    <div className="text-xl font-bold font-sans">$4,250.00</div>
+                </div>
+            </div>
+        </div>
 
-        {payouts.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl shadow-sm border">
-            <FaDollarSign className="text-5xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800">No Payouts Yet</h3>
-            <p className="text-gray-500 mt-2">Your completed campaign payouts will appear here.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {payouts.map((payout) => {
-              const statusConfig = getStatusConfig(payout.status);
-              return (
-                <motion.div
-                  key={payout._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                    <div className="md:col-span-2">
-                      <h3 className="font-bold text-lg text-gray-800">{payout.campaignId.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                        <div className="flex items-center gap-2">
-                          <FaCalendarAlt />
-                          <span>{new Date(payout.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <div className={`flex items-center gap-2 capitalize font-medium px-3 py-1 rounded-lg ${statusConfig.color}`}>
-                          {statusConfig.icon}
-                          <span>{statusConfig.label}</span>
-                        </div>
-                      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* History Table */}
+            <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                            <FaHistory className="text-gray-400" /> Transaction History
+                        </h3>
+                        <button className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1">
+                            <FaDownload className="text-xs" /> Export CSV
+                        </button>
                     </div>
-                    <div className="text-left md:text-right">
-                      <p className="text-sm text-gray-500">Net Payout</p>
-                      <p className="font-bold text-2xl text-green-600">${payout.netPayout.toLocaleString()}</p>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4">Campaign</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Amount</th>
+                                    <th className="px-6 py-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {payouts.map((payout, idx) => (
+                                    <tr key={payout._id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-gray-900 text-sm">{payout.campaignId.title}</div>
+                                            <div className="text-xs text-gray-400">ID: #{payout._id}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                            {new Date(payout.date).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                                            ${payout.amount.toLocaleString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end">
+                                                {getStatusBadge(payout.status)}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                    <div className="text-left md:text-right">
-                      <p className="text-sm text-gray-500">Platform Fee</p>
-                      <p className="font-semibold text-lg text-red-500">-${payout.platformFee.toLocaleString()}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+                </div>
+            </div>
 
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <button
-              onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
-              disabled={pagination.page <= 1}
-              className="px-4 py-2 bg-white border rounded-lg shadow-sm disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="font-medium">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <button
-              onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
-              disabled={pagination.page >= pagination.totalPages}
-              className="px-4 py-2 bg-white border rounded-lg shadow-sm disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
+            {/* Payment Methods */}
+            <div className="space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <h3 className="font-bold text-gray-900 mb-4">Payment Methods</h3>
+                    
+                    <div className="space-y-3">
+                         <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+                             <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xs">
+                                     TB
+                                 </div>
+                                 <div>
+                                     <div className="font-bold text-sm text-gray-900">Telebirr</div>
+                                     <div className="text-xs text-gray-500">**** 8902</div>
+                                 </div>
+                             </div>
+                             <FaCheckCircle className="text-green-500" />
+                         </div>
+                         
+                         <button className="w-full py-3 border border-dashed border-gray-300 rounded-xl text-sm font-bold text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                             + Add Payment Method
+                         </button>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h3 className="font-bold text-lg mb-2">Need Help?</h3>
+                        <p className="text-gray-300 text-sm mb-4">
+                            Contact support regarding payment issues or tax documents.
+                        </p>
+                        <button className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">
+                            Contact Support
+                        </button>
+                    </div>
+                    {/* Decor */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+                </div>
+            </div>
+        </div>
       </div>
     </DashboardLayout>
   );

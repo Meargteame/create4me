@@ -1,13 +1,15 @@
+@import './styles/premium-effects.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer utilities {
   .glass-enhanced {
-    @apply bg-white/80 backdrop-blur-xl border border-white/50 shadow-lg;
+    @apply bg-white/90 backdrop-blur-xl border border-gray-100 shadow-sm;
   }
   .premium-button {
-    @apply bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full font-bold hover:from-green-700 hover:to-emerald-700 hover:shadow-xl hover:scale-105 transition-all shadow-lg;
+    @apply bg-primary text-white rounded-lg font-bold hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all;
   }
   .animate-infinite-scroll {
     animation: infinite-scroll 40s linear infinite;
@@ -16,10 +18,17 @@
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Premium Effects - Advanced animations and glassmorphism */
-@import './styles/premium-effects.css';
 
 * {
   margin: 0;
@@ -28,14 +37,23 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #FAFAFA; /* Studio White / Off White */
+  color: #111111;
   min-height: 100vh;
 }
 
-/* Grid Background Pattern */
+/* Aura Background Spec */
+.aura-bg {
+    background-color: #FAFAFA;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(17, 17, 17, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
+}
 .grid-background {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),

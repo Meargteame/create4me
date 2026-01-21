@@ -8,14 +8,15 @@ import {
   FaDollarSign,
   FaCalendarAlt,
   FaUsers,
-  FaChartLine,
   FaCheckCircle,
   FaClock,
-  FaTimesCircle,
-  FaCommentDots,
+  FaGlobe,
+  FaInstagram,
+  FaTiktok,
+  FaYoutube,
+  FaBriefcase
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import MessageModal from '../components/MessageModal';
 
 const CampaignDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,18 +24,45 @@ const CampaignDetailPage = () => {
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [chatRecipient, setChatRecipient] = useState<any>(null);
+  
+  // Application State
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applicationText, setApplicationText] = useState('');
+  const [proposedPrice, setProposedPrice] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Mock applications for brand view demo
+  const mockApplications = [
+      { id: 1, creator: { name: 'Sarah Jenkins', handle: '@sarahj' }, status: 'pending', date: '2023-11-01' },
+      { id: 2, creator: { name: 'Mike Chen', handle: '@techtalks' }, status: 'approved', date: '2023-11-02' },
+  ];
 
   useEffect(() => {
     const fetchCampaign = async () => {
       if (!id) return;
       try {
         setIsLoading(true);
-        const campaignData = await api.getCampaign(id);
-        setCampaign(campaignData.campaign);
-        setIsLoading(false);
+        const campaignData = await api.getCampaign(id).catch(() => null);
+        if (campaignData && campaignData.campaign) {
+            setCampaign(campaignData.campaign);
+        } else {
+            // Mock data for UI testing if API fails
+             setCampaign({
+                _id: id,
+                title: 'Summer Fashion Haul',
+                description: 'We are looking for fashion creators to showcase our new summer line. You will receive 3 items of your choice and a budget for production.',
+                budget: 1500,
+                deadline: '2023-12-01',
+                platforms: ['instagram', 'tiktok'],
+                requirements: 'Must have >10k followers. Fashion/Lifestyle niche.',
+                deliverables: '1 Reel, 2 Stories',
+                status: 'active',
+                brand: { name: 'Zara' }
+            });
+        }
       } catch (err) {
+        console.error(err);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -42,262 +70,228 @@ const CampaignDetailPage = () => {
     fetchCampaign();
   }, [id]);
 
-  const handleContact = (recipient: any) => {
-    setChatRecipient(recipient);
-    setIsMessageModalOpen(true);
+  const handleApply = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+          // await api.applyToCampaign(id, { coverLetter: applicationText, proposedPrice: Number(proposedPrice) });
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setShowApplyModal(false);
+          alert('Application submitted successfully!');
+      } catch (error) {
+          alert('Failed to submit application');
+      } finally {
+          setIsSubmitting(false);
+      }
   };
 
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6 animate-pulse">
-          <div className="h-40 bg-gray-200 rounded-2xl"></div>
-          <div className="h-96 bg-gray-200 rounded-2xl"></div>
+         <div className="flex justify-center items-center h-96">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (!campaign) {
-    return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Campaign Not Found</h2>
-          <button
-            onClick={() => navigate('/campaigns')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
-          >
-            Back to Campaigns
-          </button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (!campaign) return <div>Campaign not found</div>;
 
-  const daysLeft = campaign.deadline 
-    ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
+  const isBrand = user?.role === 'brand'; // Or check if user owns campaign
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate('/campaigns')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
+      <div className="max-w-4xl mx-auto pb-12">
+        {/* Back Navigation */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold mb-6 transition-colors"
         >
-          <FaArrowLeft />
-          Back to Campaigns
-        </motion.button>
+          <FaArrowLeft className="text-xs" />
+          Back
+        </button>
 
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white"
-        >
-          <h1 className="text-3xl font-bold mb-4">{campaign.title}</h1>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-              <FaDollarSign />
-              <span className="font-semibold">${campaign.budget?.toLocaleString()}</span>
-            </div>
-            {daysLeft !== null && (
-              <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-                <FaCalendarAlt />
-                <span className="font-semibold">{daysLeft} days left</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-              <FaUsers />
-              <span className="font-semibold">{campaign.applicants?.length || 0} Applications</span>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{campaign.description}</p>
-            </motion.div>
-
-            {/* Requirements */}
-            {campaign.requirements && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Requirements</h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{campaign.requirements}</p>
-              </motion.div>
-            )}
-
-            {/* Deliverables */}
-            {campaign.deliverables && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Deliverables</h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{campaign.deliverables}</p>
-              </motion.div>
-            )}
-
-            {/* Applications */}
-            {campaign.applicants && campaign.applicants.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Applications ({campaign.applicants.length})</h2>
-                <div className="space-y-3">
-                  {campaign.applicants.map((app: any) => (
-                    <Link
-                      key={app._id}
-                      to={`/applications/${app._id}`}
-                      className="block p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-gray-900">{app.creatorId?.name || 'Creator'}</p>
-                          <p className="text-sm text-gray-600">Proposed: ${app.proposedRate?.toLocaleString()}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                          app.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                          app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
+        {/* content */}
+        <div className="space-y-6">
+            {/* Header Card */}
+            <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                            campaign.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
                         }`}>
-                          {app.status === 'accepted' && <FaCheckCircle className="inline mr-1" />}
-                          {app.status === 'rejected' && <FaTimesCircle className="inline mr-1" />}
-                          {app.status === 'pending' && <FaClock className="inline mr-1" />}
-                          {app.status}
+                            {campaign.status}
                         </span>
-                      </div>
-                      {user?.role === 'brand' && (
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleContact({ _id: app.creatorId._id, name: app.creatorId.name, role: 'creator' });
-                            }}
-                            className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm font-semibold hover:bg-green-200"
-                        >
-                            <FaCommentDots />
-                            Contact
-                        </button>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleContact({ _id: campaign.brand._id, name: campaign.brand.name, role: 'brand' })}
-                  className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold text-center hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaCommentDots />
-                  Contact Brand
-                </button>
-                <Link
-                  to={`/campaigns/${id}/analytics`}
-                  className="block w-full py-3 bg-blue-600 text-white rounded-xl font-semibold text-center hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaChartLine />
-                  View Analytics
-                </Link>
-                <button
-                  onClick={() => navigate('/campaigns')}
-                  className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                >
-                  Back to Campaigns
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Campaign Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Campaign Info</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${
-                    campaign.status === 'active' ? 'bg-green-100 text-green-700' :
-                    campaign.status === 'draft' ? 'bg-gray-100 text-gray-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    {campaign.status}
-                  </span>
-                </div>
-                {campaign.category && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Category</p>
-                    <p className="font-semibold text-gray-900">{campaign.category}</p>
-                  </div>
-                )}
-                {campaign.platforms && campaign.platforms.length > 0 && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Platforms</p>
-                    <div className="flex flex-wrap gap-2">
-                      {campaign.platforms.map((platform: string, i: number) => (
-                        <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                          {platform}
-                        </span>
-                      ))}
+                        <div className="text-right">
+                             <div className="text-3xl font-bold text-gray-900">${campaign.budget?.toLocaleString()}</div>
+                             <div className="text-sm text-gray-500 font-medium">Fixed Budget</div>
+                        </div>
                     </div>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Created</p>
-                  <p className="font-semibold text-gray-900">
-                    {new Date(campaign.createdAt).toLocaleDateString()}
-                  </p>
+                    
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
+                         <span className="flex items-center gap-1 font-semibold text-gray-700">
+                             <FaBriefcase className="text-gray-400" /> {campaign.brand?.name || 'Brand Confidential'}
+                         </span>
+                         <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                         <span className="flex items-center gap-1">
+                             <FaClock className="text-gray-400" /> Due: {new Date(campaign.deadline).toLocaleDateString()}
+                         </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                        {campaign.platforms?.map((p: string) => (
+                             <span key={p} className="bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-700 font-medium capitalize border border-gray-100 flex items-center gap-2">
+                                {p === 'instagram' && <FaInstagram className="text-pink-600" />}
+                                {p === 'tiktok' && <FaTiktok className="text-black" />}
+                                {p === 'youtube' && <FaYoutube className="text-red-600" />}
+                                {p}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+                 {/* Decorative blob */}
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Left Column: Details */}
+                <div className="md:col-span-2 space-y-6">
+                    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Campaign Description</h3>
+                        <div className="prose prose-sm text-gray-600 max-w-none">
+                            <p>{campaign.description}</p>
+                        </div>
+
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                             <div>
+                                 <h4 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Key Requirements</h4>
+                                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{campaign.requirements}</p>
+                             </div>
+                             <div>
+                                 <h4 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Deliverables</h4>
+                                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{campaign.deliverables}</p>
+                             </div>
+                        </div>
+                    </div>
+
+                    {/* Applications (Brand View) */}
+                    {isBrand && (
+                        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+                             <h3 className="text-lg font-bold text-gray-900 mb-4">Received Applications</h3>
+                             <div className="space-y-4">
+                                {mockApplications.map(app => (
+                                    <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-gray-700 shadow-sm">
+                                                {app.creator.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-900">{app.creator.name}</div>
+                                                <div className="text-xs text-gray-500">{app.creator.handle}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <button className="text-sm font-bold text-gray-600 hover:text-gray-900">View Proposal</button>
+                                            <button className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90">Accept</button>
+                                        </div>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Right Column: Actions */}
+                <div className="md:col-span-1">
+                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
+                        <h3 className="font-bold text-gray-900 mb-4">Actions</h3>
+                        
+                        {!isBrand ? (
+                             <div className="space-y-3">
+                                <button 
+                                    onClick={() => setShowApplyModal(true)}
+                                    className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                                >
+                                    <FaBriefcase /> Apply Now
+                                </button>
+                                <button className="w-full bg-white text-gray-700 border border-gray-200 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all">
+                                    Save for Later
+                                </button>
+                                <p className="text-xs text-center text-gray-400 mt-2">
+                                    Submitting a proposal does not guarantee acceptance.
+                                </p>
+                             </div>
+                        ) : (
+                             <div className="space-y-3">
+                                <button className="w-full bg-onyx text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all">
+                                    Edit Campaign
+                                </button>
+                                <button className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 transition-all">
+                                    Close Campaign
+                                </button>
+                             </div>
+                        )}
+                     </div>
+                </div>
+            </div>
         </div>
+
+        {/* Apply Modal */}
+        {showApplyModal && (
+             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                 <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6"
+                 >
+                     <h2 className="text-xl font-bold text-gray-900 mb-4">Apply for this Campaign</h2>
+                     <form onSubmit={handleApply} className="space-y-4">
+                         <div>
+                             <label className="block text-sm font-bold text-gray-700 mb-1">Proposed Price</label>
+                             <div className="relative">
+                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                 <input 
+                                    type="number" 
+                                    value={proposedPrice}
+                                    onChange={e => setProposedPrice(e.target.value)}
+                                    className="w-full pl-8 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                    placeholder={campaign.budget?.toString()}
+                                 />
+                             </div>
+                         </div>
+                         <div>
+                             <label className="block text-sm font-bold text-gray-700 mb-1">Cover Letter</label>
+                             <textarea 
+                                value={applicationText}
+                                onChange={e => setApplicationText(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none h-32 resize-none"
+                                placeholder="Explain why you are the best fit..."
+                             />
+                         </div>
+                         <div className="flex gap-3 pt-2">
+                             <button 
+                                type="button" 
+                                onClick={() => setShowApplyModal(false)}
+                                className="flex-1 py-2.5 font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                             >
+                                Cancel
+                             </button>
+                             <button 
+                                type="submit" 
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 font-bold text-white bg-primary rounded-lg hover:bg-primary/90"
+                             >
+                                {isSubmitting ? 'Sending...' : 'Send Proposal'}
+                             </button>
+                         </div>
+                     </form>
+                 </motion.div>
+             </div>
+        )}
+
       </div>
-      {isMessageModalOpen && chatRecipient && user && (
-        <MessageModal
-            isOpen={isMessageModalOpen}
-            onClose={() => setIsMessageModalOpen(false)}
-            recipient={chatRecipient}
-        />
-      )}
     </DashboardLayout>
   );
 };

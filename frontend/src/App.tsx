@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import HomePage from './pages/HomePageWorldClass';
+import HomePage from './pages/HomePageRefined';
 import LoginPage from './pages/LoginPageNew';
 import RegisterPage from './pages/RegisterPageNew';
 import DashboardPage from './pages/DashboardPageNew';
@@ -13,6 +13,7 @@ import ApplicationDetailPage from './pages/ApplicationDetailPageNew';
 import ApplicationsPage from './pages/ApplicationsPageNew';
 import CampaignAnalyticsPage from './pages/CampaignAnalyticsPageNew';
 import CampaignDetailPage from './pages/CampaignDetailPage';
+import CreatorProfilePage from './pages/CreatorProfilePage';
 import MessagesPage from './pages/MessagesPage';
 import PayoutsHistoryPage from './pages/PayoutsHistoryPage';
 
@@ -41,6 +42,7 @@ function AppRoutes() {
         <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboardPage /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
         <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
+        <Route path="/profile/:id" element={<CreatorProfilePage />} />
         <Route path="/campaigns/:id/analytics" element={<ProtectedRoute><CampaignAnalyticsPage /></ProtectedRoute>} />
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEditorPage /></ProtectedRoute>} />
         <Route path="/payouts" element={<ProtectedRoute><PayoutsHistoryPage /></ProtectedRoute>} />
