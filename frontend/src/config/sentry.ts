@@ -1,9 +1,11 @@
 // Sentry configuration for frontend
 // Add your Sentry DSN from https://sentry.io
 
-import * as Sentry from '@sentry/react';
+// import * as Sentry from '@sentry/react';
 
 export const initSentry = () => {
+    console.log('Sentry disabled for now.');
+    /*
     if (import.meta.env.VITE_SENTRY_DSN && import.meta.env.PROD) {
         Sentry.init({
             dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -28,6 +30,9 @@ export const initSentry = () => {
     } else {
         console.log('⚠️  Sentry not initialized (development mode or missing DSN)');
     }
+    */
 };
 
-export { Sentry };
+export const Sentry = {
+    captureException: (e: any) => console.error(e)
+};

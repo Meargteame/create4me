@@ -8,20 +8,29 @@
   .glass-enhanced {
     @apply bg-white/90 backdrop-blur-xl border border-gray-100 shadow-sm;
   }
+
   .premium-button {
     @apply bg-primary text-white rounded-lg font-bold hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all;
   }
+
   .animate-infinite-scroll {
     animation: infinite-scroll 40s linear infinite;
   }
+
   @keyframes infinite-scroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -36,24 +45,41 @@
   box-sizing: border-box;
 }
 
+@layer base {
+  :root {
+    --bg-primary: #FAFAFA;
+    --text-primary: #111111;
+    --text-secondary: #6B7280;
+    --bg-card: #FFFFFF;
+    --bg-input: #F9FAFB;
+    --border-color: #E5E7EB;
+  }
+
+  /* Dark mode removed */
+}
+
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #FAFAFA; /* Studio White / Off White */
-  color: #111111;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+
 
 /* Aura Background Spec */
 .aura-bg {
-    background-color: #FAFAFA;
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(17, 17, 17, 0.03) 0px, transparent 50%);
-    background-attachment: fixed;
+  background-color: #FAFAFA;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(255, 46, 0, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(17, 17, 17, 0.03) 0px, transparent 50%);
+  background-attachment: fixed;
 }
+
 .grid-background {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -260,14 +286,14 @@ body {
 }
 
 .glass-nav {
-    @apply bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-lg;
+  @apply bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-lg;
 }
 
 .card-glow {
-    box-shadow: 0 0 20px rgba(74, 222, 128, 0.4), 0 0 40px rgba(74, 222, 128, 0.2);
-    transition: box-shadow 0.3s ease-in-out;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.4), 0 0 40px rgba(74, 222, 128, 0.2);
+  transition: box-shadow 0.3s ease-in-out;
 }
 
 .card-glow:hover {
-    box-shadow: 0 0 30px rgba(74, 222, 128, 0.6), 0 0 60px rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.6), 0 0 60px rgba(74, 222, 128, 0.4);
 }

@@ -40,7 +40,7 @@ export default function MessagingPage() {
 
   useEffect(() => {
     loadConversations();
-    
+
     // Check if there's a userId in query params to start a conversation
     const searchParams = new URLSearchParams(location.search);
     const userId = searchParams.get('userId');
@@ -114,7 +114,7 @@ export default function MessagingPage() {
     if (!newMessage.trim() || !selectedUserId) return;
 
     try {
-      const response = await api.sendMessage(selectedUserId, newMessage.trim());
+      const response = await api.sendMessage({ receiverId: selectedUserId, content: newMessage.trim() });
       // Transform the response message
       const transformedMessage = {
         _id: response.message._id,
@@ -126,7 +126,7 @@ export default function MessagingPage() {
       };
       setMessages([...messages, transformedMessage]);
       setNewMessage('');
-      
+
       // Update conversation list
       await loadConversations();
     } catch (error) {
@@ -157,17 +157,17 @@ export default function MessagingPage() {
   };
 
   const selectedConversation = conversations.find(c => c.otherUser._id === selectedUserId);
-  
+
   // If user is selected but not in conversations (new conversation), create a placeholder
   const [newConversationUser, setNewConversationUser] = useState<any>(null);
-  
+
   useEffect(() => {
     if (selectedUserId && !selectedConversation) {
       // This is a new conversation, fetch user info
       loadUserInfo(selectedUserId);
     }
   }, [selectedUserId, selectedConversation]);
-  
+
   const loadUserInfo = async (userId: string) => {
     try {
       // Try to get creator info
@@ -184,7 +184,7 @@ export default function MessagingPage() {
       console.error('Failed to load user info:', error);
     }
   };
-  
+
   const displayUser = selectedConversation?.otherUser || newConversationUser;
 
   if (loading) {
@@ -221,9 +221,8 @@ export default function MessagingPage() {
                     <button
                       key={conversation.otherUser._id}
                       onClick={() => setSelectedUserId(conversation.otherUser._id)}
-                      className={`w-full p-4 border-b border-white/10 hover:bg-white/5 transition-colors text-left ${
-                        selectedUserId === conversation.otherUser._id ? 'bg-white/10' : ''
-                      }`}
+                      className={`w-full p-4 border-b border-white/10 hover:bg-white/5 transition-colors text-left ${selectedUserId === conversation.otherUser._id ? 'bg-white/10' : ''
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
@@ -293,17 +292,15 @@ export default function MessagingPage() {
                           className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                              isOwn
+                            className={`max-w-[70%] rounded-2xl px-4 py-3 ${isOwn
                                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                                 : 'bg-white/10 text-white'
-                            }`}
+                              }`}
                           >
                             <p className="whitespace-pre-wrap break-words">{message.content}</p>
                             <p
-                              className={`text-xs mt-1 ${
-                                isOwn ? 'text-white/70' : 'text-white/50'
-                              }`}
+                              className={`text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-white/50'
+                                }`}
                             >
                               {formatTime(message.createdAt)}
                             </p>

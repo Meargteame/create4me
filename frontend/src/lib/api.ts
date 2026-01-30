@@ -156,11 +156,11 @@ class ApiClient {
 
   // Message endpoints
   async getConversations() {
-    return this.request('/messages/conversations');
+    return this.request('/chat/conversations');
   }
 
   async getMessages(partnerId: string) {
-    return this.request(`/chat/${partnerId}`);
+    return this.request(`/chat/conversation/${partnerId}`);
   }
 
   async sendMessage(data: { receiverId: string; content: string; conversationId?: string }) {

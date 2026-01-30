@@ -1,25 +1,34 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: {
-            DEFAULT: '#FF2E00', // Signal Red / Aura Red
-            50: '#FFF1F0',
-            100: '#FFE4E1',
-            200: '#FFC9C2',
-            300: '#FFAFA3',
-            400: '#FF7B66',
-            500: '#FF2E00',
-            600: '#DB2600',
-            700: '#B81F00',
-            800: '#941900',
-            900: '#7A1400',
+          DEFAULT: '#FF2E00', // Signal Red / Aura Red
+          50: '#FFF1F0',
+          100: '#FFE4E1',
+          200: '#FFC9C2',
+          300: '#FFAFA3',
+          400: '#FF7B66',
+          500: '#FF2E00',
+          600: '#DB2600',
+          700: '#B81F00',
+          800: '#941900',
+          900: '#7A1400',
         },
         'studio-white': '#FFFFFF',
         'off-white': '#F9FAFB',
         'onyx': '#111111',
+        // Semantic Colors for Dark Mode
+        main: 'var(--bg-primary)',
+        card: 'var(--bg-card)',
+        input: 'var(--bg-input)',
+        txt: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+        }
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
@@ -34,8 +43,8 @@ export default {
           '50%': { boxShadow: '0 0 20px rgba(255, 46, 0, 0.5), inset 0 0 10px rgba(255, 46, 0, 0.2)' },
         },
         float: {
-            '0%, 100%': { transform: 'translateY(0)' },
-            '50%': { transform: 'translateY(-10px)' },
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         }
       },
       backgroundImage: {

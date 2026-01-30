@@ -46,6 +46,7 @@ function AppRoutes() {
         <Route path="/campaigns/:id/analytics" element={<ProtectedRoute><CampaignAnalyticsPage /></ProtectedRoute>} />
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEditorPage /></ProtectedRoute>} />
         <Route path="/payouts" element={<ProtectedRoute><PayoutsHistoryPage /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
