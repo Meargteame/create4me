@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { supabaseAdmin } from '../config/supabase';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -14,7 +13,7 @@ export const authenticate = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({
         success: false,
@@ -22,29 +21,34 @@ export const authenticate = async (
       });
       return;
     }
-    
+
     const token = authHeader.substring(7);
-    const secret = process.env.JWT_SECRET || 'fallback-secret';
-    
-    const decoded = jwt.verify(token, secret) as { userId: string };
-    
-    const user = await User.findById(decoded.userId).select('-passwordHash');
-    
-    if (!user) {
+
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+    if (error || !user) {
       res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'Invalid token'
       });
       return;
     }
-    
-    req.user = user;
+
+    // Get additional user info from our 'users' table
+    const { data: dbUser } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    req.user = dbUser || user; // Fallback to auth user if db record missing
     req.userId = user.id;
     next();
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: 'Authentication failed'
     });
   }
 };

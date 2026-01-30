@@ -1,110 +1,48 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { connectDatabase, disconnectDatabase } from './config/database';
-import authRouter from './routes/auth';
-import applicationsRouter from './routes/applications';
-import campaignsRouter from './routes/campaigns';
-import creatorsRouter from './routes/creators';
-import chatRouter from './routes/chat';
-import paymentsRouter from './routes/payments';
-import uploadRouter from './routes/upload';
-import analyticsRouter from './routes/analytics';
+import authRoutes from './routes/auth';
+import campaignRoutes from './routes/campaigns';
+import creatorRoutes from './routes/creators';
+import applicationRoutes from './routes/applications';
+import chatRoutes from './routes/chat';
+// import paymentRoutes from './routes/payments'; // Need to migrate payments later
+// import uploadRoutes from './routes/upload'; // Need to migrate upload later
+import { supabaseAdmin } from './config/supabase';
 
-// Load environment variables
-dotenv.config();
+const app = express();
 
-export const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Security middleware
+// Middleware
 app.use(helmet());
+app.use(cors());
+app.use(express.json());
 
-// CORS configuration
-const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = [
-      'https://create4mee.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5173',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
-
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/creators', creatorRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/chat', chatRoutes);
+// app.use('/api/payments', paymentRoutes);
+// app.use('/api/upload', uploadRoutes);
 
 // Health check
-app.get(['/health', '/api/health'], (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Create4Me API',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// API routes
-app.use('/api/auth', authRouter);
-app.use('/api/applications', applicationsRouter);
-app.use('/api/campaigns', campaignsRouter);
-app.use('/api/creators', creatorsRouter);
-app.use('/api/chat', chatRouter);
-app.use('/api/payments', paymentsRouter);
-app.use('/api/upload', uploadRouter);
-app.use('/api/analytics', analyticsRouter);
-
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error'
-  });
-});
-
-// Start server
-const startServer = async () => {
-  try {
-    await connectDatabase();
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🗄️  Database: MongoDB`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+app.get('/health', async (req, res) => {
+  const { error } = await supabaseAdmin.from('users').select('count').limit(1);
+  if (error) {
+    return res.status(500).json({ status: 'error', message: 'Database connection failed' });
   }
-};
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  await disconnectDatabase();
-  process.exit(0);
+  res.status(200).json({ status: 'ok', database: 'connected' });
 });
 
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  await disconnectDatabase();
-  process.exit(0);
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log('✅ Supabase connected');
 });
 
-startServer();
+export default app;

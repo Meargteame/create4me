@@ -1,123 +1,108 @@
 import express, { Response } from 'express';
-import { CreatorProfile } from '../models/CreatorProfile';
-import { authenticate, AuthRequest, requireRole } from '../middleware/auth';
+import { supabaseAdmin } from '../config/supabase';
+import { authenticate as requireAuth, AuthRequest } from '../middleware/auth';
+import { requireRole as rbac } from '../middleware/auth';
 
 const router = express.Router();
 
 /**
  * CREATOR DISCOVERY ENDPOINT (Brand Dashboard)
- * GET /api/creators/discover
- * Protected: Brand role only
- * 
- * Powers the Brand Dashboard search and vetting process
- * Supports filtering by:
- * - verification_status: 'verified' or 'all'
- * - content_niche: category field (e.g., 'fashion', 'tech')
- * - primary_platform: platform name (e.g., 'TikTok', 'Instagram')
- * - min_followers: minimum follower count
- * - max_rate: maximum creator rate
  */
-router.get('/discover', authenticate, requireRole(['brand']), async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/discover', requireAuth, rbac(['brand']), async (req: AuthRequest, res: Response) => {
   try {
     const {
-      verification_status,   // 'verified' | 'all'
-      content_niche,          // 'fashion', 'tech', 'lifestyle', etc.
-      primary_platform,       // 'TikTok', 'Instagram', 'YouTube'
+      verification_status,
+      content_niche,
+      primary_platform,
       min_followers,
-      max_rate,
-      sort = 'followers',      // 'followers' | 'engagement' | 'rating' | 'recent'
+      sort = 'followers',
       page = 1,
       limit = 20
     } = req.query;
 
-    // Build filter query
-    const filter: any = {};
+    let query = supabaseAdmin
+      .from('creator_profiles')
+      .select(`
+        *,
+        user:user_id(name, email, is_vetted_profile)
+      `, { count: 'exact' });
 
-    // Verification status filter
+    // 1. Apply Filters
+
+    // Status
     if (verification_status === 'verified') {
-      filter['verificationDocs.status'] = 'approved';
+      query = query.eq('is_verified', true);
     }
 
-    // Content niche filter
+    // Niche (category)
     if (content_niche && content_niche !== 'all') {
-      filter.category = content_niche;
+      // Assuming naive string match or ILIKE if category is text
+      query = query.ilike('category', `%${content_niche}%`);
     }
 
-    // Primary platform filter
+    // Platform (array containment)
     if (primary_platform && primary_platform !== 'all') {
-      filter['platforms.name'] = primary_platform;
+      query = query.contains('platforms', [primary_platform]);
     }
 
-    // Minimum followers filter
+    // Followers
     if (min_followers) {
-      filter['platforms.followers'] = { $gte: parseInt(min_followers as string) };
+      query = query.gte('followers', parseInt(min_followers as string));
     }
 
-    // Maximum rate filter
-    if (max_rate) {
-      filter.minimumRate = { $lte: parseInt(max_rate as string) };
+    // Availability - Always filter for availability in discover
+    query = query.eq('is_available', true);
+
+    // 2. Sorting
+    switch (sort) {
+      case 'followers':
+        query = query.order('followers', { ascending: false });
+        break;
+      case 'engagement':
+        query = query.order('engagement', { ascending: false });
+        break;
+      case 'rating':
+        query = query.order('rating', { ascending: false });
+        break;
+      case 'recent':
+        query = query.order('created_at', { ascending: false });
+        break;
+      default:
+        query = query.order('followers', { ascending: false });
     }
 
-    // Only show available creators
-    filter.isAvailable = true;
+    // 3. Pagination
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const from = (pageNum - 1) * limitNum;
+    const to = from + limitNum - 1;
 
-    // Build sort query
-    const sortMap: Record<string, any> = {
-      followers: { 'platforms.followers': -1 },
-      engagement: { 'platforms.engagementRate': -1 },
-      rating: { 'stats.avgRating': -1 },
-      recent: { createdAt: -1 }
-    };
-    const sortQuery = sortMap[sort as string] || sortMap.followers;
+    query = query.range(from, to);
 
-    // Calculate pagination
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const { data: creators, count, error } = await query;
 
-    // Execute query
-    const [creators, total] = await Promise.all([
-      CreatorProfile.find(filter)
-        .populate('userId', 'name email avatar isVettedProfile')
-        .sort(sortQuery)
-        .skip(skip)
-        .limit(parseInt(limit as string))
-        .lean(),
+    if (error) throw error;
 
-      CreatorProfile.countDocuments(filter)
-    ]);
-
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(total / parseInt(limit as string));
+    const total = count || 0;
+    const totalPages = Math.ceil(total / limitNum);
 
     res.json({
       success: true,
       data: {
         creators,
         pagination: {
-          page: parseInt(page as string),
-          limit: parseInt(limit as string),
+          page: pageNum,
+          limit: limitNum,
           total,
           totalPages,
-          hasNextPage: parseInt(page as string) < totalPages,
-          hasPrevPage: parseInt(page as string) > 1
-        },
-        filters: {
-          verification_status: verification_status || 'all',
-          content_niche: content_niche || 'all',
-          primary_platform: primary_platform || 'all',
-          min_followers: min_followers ? parseInt(min_followers as string) : null,
-          max_rate: max_rate ? parseInt(max_rate as string) : null,
-          sort
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
         }
       }
     });
 
   } catch (error: any) {
-    console.error('Creator discovery error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch creators',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -126,33 +111,42 @@ router.get('/', async (req, res): Promise<void> => {
   try {
     const { category, search, page = 1, limit = 12 } = req.query;
 
-    const query: any = {};
-    if (category) query.category = category;
-    if (search) {
-      query.$or = [
-        { displayName: { $regex: search, $options: 'i' } },
-        { username: { $regex: search, $options: 'i' } },
-        { bio: { $regex: search, $options: 'i' } }
-      ];
+    let query = supabaseAdmin
+      .from('creator_profiles')
+      .select(`
+        *,
+        user:user_id(name, email)
+      `, { count: 'exact' });
+
+    if (category) {
+      query = query.eq('category', category);
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const creators = await CreatorProfile.find(query)
-      .populate('userId', 'name email')
-      .skip(skip)
-      .limit(Number(limit))
-      .sort({ createdAt: -1 });
+    if (search) {
+      const searchTerm = `%${search}%`;
+      query = query.or(`display_name.ilike.${searchTerm},username.ilike.${searchTerm},bio.ilike.${searchTerm}`);
+    }
 
-    const total = await CreatorProfile.countDocuments(query);
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const from = (pageNum - 1) * limitNum;
+
+    query = query
+      .range(from, from + limitNum - 1)
+      .order('created_at', { ascending: false });
+
+    const { data: creators, count, error } = await query;
+
+    if (error) throw error;
 
     res.json({
       success: true,
       data: creators,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        totalPages: Math.ceil(total / Number(limit))
+        page: pageNum,
+        limit: limitNum,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limitNum)
       }
     });
   } catch (error: any) {
@@ -160,96 +154,70 @@ router.get('/', async (req, res): Promise<void> => {
   }
 });
 
-// Get single creator (increment views)
+// Get single creator
 router.get('/:id', async (req, res): Promise<void> => {
   try {
-    const creator = await CreatorProfile.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { profileViews: 1 } },
-      { new: true }
-    ).populate('userId', 'name email');
+    // 1. Fetch creator
+    const { data: creator, error } = await supabaseAdmin
+      .from('creator_profiles')
+      .select(`
+        *,
+        user:user_id(name, email)
+      `)
+      .eq('id', req.params.id)
+      .single();
 
-    if (!creator) {
-      res.status(404).json({ success: false, message: 'Creator not found' });
-      return;
+    if (error || !creator) {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
     }
+
+    // 2. Increment view count (fire and forget)
+    // We handle the promise to avoid unhandled rejections, but don't await response
+    supabaseAdmin.rpc('increment_profile_views', { profile_id: req.params.id })
+      .then(({ error }) => {
+        if (error) console.error('Error incrementing views:', error);
+      });
+
     res.json({ success: true, creator });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Update own creator profile
-router.put('/profile', authenticate, requireRole(['creator']), async (req: AuthRequest, res: Response): Promise<void> => {
+// Update own profile
+router.put('/profile', requireAuth, rbac(['creator']), async (req: AuthRequest, res: Response) => {
   try {
-    const profile = await CreatorProfile.findOneAndUpdate(
-      { userId: req.userId },
-      { ...req.body, lastActive: new Date() },
-      { new: true, upsert: true }
-    );
+    // Upsert profile based on user_id
+    const { data: profile, error } = await supabaseAdmin
+      .from('creator_profiles')
+      .upsert({
+        user_id: req.userId,
+        ...req.body,
+        last_active: new Date()
+      }, { onConflict: 'user_id' })
+      .select()
+      .single();
 
+    if (error) throw error;
     res.json({ success: true, profile });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Get own creator profile
-router.get('/profile/me', authenticate, requireRole(['creator']), async (req: AuthRequest, res: Response): Promise<void> => {
+// Get own profile
+router.get('/profile/me', requireAuth, rbac(['creator']), async (req: AuthRequest, res: Response) => {
   try {
-    const profile = await CreatorProfile.findOne({ userId: req.userId });
-    if (!profile) {
-      res.status(404).json({ success: false, message: 'Profile not found' });
-      return;
-    }
-    res.json({ success: true, profile });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+    const { data: profile, error } = await supabaseAdmin
+      .from('creator_profiles')
+      .select('*')
+      .eq('user_id', req.userId)
+      .single();
 
-// Add portfolio item
-router.post('/profile/portfolio', authenticate, requireRole(['creator']), async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { type, url, title, description, thumbnail } = req.body;
-
-    const profile = await CreatorProfile.findOneAndUpdate(
-      { userId: req.userId },
-      {
-        $push: {
-          portfolioItems: { type, url, title, description, thumbnail }
-        },
-        lastActive: new Date()
-      },
-      { new: true }
-    );
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "Row not found"
 
     if (!profile) {
-      res.status(404).json({ success: false, message: 'Profile not found' });
-      return;
-    }
-
-    res.json({ success: true, profile });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Delete portfolio item
-router.delete('/profile/portfolio/:itemId', authenticate, requireRole(['creator']), async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const profile = await CreatorProfile.findOneAndUpdate(
-      { userId: req.userId },
-      {
-        $pull: { portfolioItems: { _id: req.params.itemId } },
-        lastActive: new Date()
-      },
-      { new: true }
-    );
-
-    if (!profile) {
-      res.status(404).json({ success: false, message: 'Profile not found' });
-      return;
+      return res.status(404).json({ success: false, message: 'Profile not found' });
     }
 
     res.json({ success: true, profile });

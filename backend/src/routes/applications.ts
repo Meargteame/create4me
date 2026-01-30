@@ -1,100 +1,115 @@
 import express, { Response } from 'express';
-import { Application } from '../models/Application';
-import { authenticate, AuthRequest } from '../middleware/auth';
-import { requireRole } from '../middleware/rbac';
-import { Campaign } from '../models/Campaign';
-import mongoose from 'mongoose';
+import { supabaseAdmin } from '../config/supabase';
+import { authenticate as requireAuth, AuthRequest } from '../middleware/auth';
+import { requireRole as rbac } from '../middleware/auth';
 
 const router = express.Router();
 
 // Apply to a campaign
-router.post('/', authenticate, requireRole('creator'), async (req: AuthRequest, res: Response) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+router.post('/', requireAuth, rbac(['creator']), async (req: AuthRequest, res: Response) => {
   try {
     const { campaignId, coverLetter, proposedPrice } = req.body;
     const creatorId = req.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
-      return res.status(400).json({ success: false, message: 'Invalid campaign ID.' });
-    }
+    // 1. Check campaign status
+    const { data: campaign, error: campError } = await supabaseAdmin
+      .from('campaigns')
+      .select('status, brand_id, applications_count')
+      .eq('id', campaignId)
+      .single();
 
-    const campaign = await Campaign.findById(campaignId).session(session);
-    if (!campaign) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ success: false, message: 'Campaign not found.' });
+    if (campError || !campaign) {
+      return res.status(404).json({ success: false, message: 'Campaign not found' });
     }
 
     if (campaign.status !== 'active') {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'This campaign is not active and is not accepting applications.' });
+      return res.status(400).json({ success: false, message: 'Campaign is not active' });
     }
 
-    const existingApplication = await Application.findOne({ campaignId, creatorId }).session(session);
-    if (existingApplication) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ success: false, message: 'You have already applied to this campaign.' });
+    // 2. Check existing application
+    const { data: existingApp } = await supabaseAdmin
+      .from('applications')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('creator_id', creatorId)
+      .single();
+
+    if (existingApp) {
+      return res.status(400).json({ success: false, message: 'Already applied' });
     }
 
-    const application = new Application({
-      campaignId,
-      creatorId,
-      coverLetter,
-      proposedPrice,
-      brandId: campaign.brandId,
-    });
+    // 3. Create application
+    const { data: newApp, error: appError } = await supabaseAdmin
+      .from('applications')
+      .insert({
+        campaign_id: campaignId,
+        creator_id: creatorId,
+        brand_id: campaign.brand_id,
+        cover_letter: coverLetter,
+        proposed_price: proposedPrice,
+        status: 'pending'
+      })
+      .select()
+      .single();
 
-    await application.save({ session });
+    if (appError) throw appError;
 
-    campaign.applicationsCount += 1;
-    await campaign.save({ session });
+    // 4. Update campaign stats (increment applications_count)
+    await supabaseAdmin
+      .from('campaigns')
+      .update({ applications_count: (campaign.applications_count || 0) + 1 })
+      .eq('id', campaignId);
 
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({ success: true, application });
+    res.status(201).json({ success: true, application: newApp });
   } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(500).json({ success: false, message: `An error occurred: ${error.message}` });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
 // Get a single application by ID
-router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        const application = await Application.findById(req.params.id)
-            .populate('campaignId', 'title description budget')
-            .populate('creatorId', 'name email profile.avatar');
+router.get('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data: application, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        campaign:campaigns(title, description, budget),
+        creator:users!creator_id(name, email)
+      `)
+      .eq('id', req.params.id)
+      .single();
 
-        if (!application) {
-            return res.status(404).json({ success: false, message: 'Application not found' });
-        }
-
-        // Security check: only creator or brand owner can view
-        const isCreator = application.creatorId._id.toString() === req.userId;
-        const campaign = await Campaign.findById(application.campaignId._id);
-        const isBrandOwner = campaign?.brandId.toString() === req.userId;
-
-        if (!isCreator && !isBrandOwner) {
-            return res.status(403).json({ success: false, message: 'Access denied' });
-        }
-
-        res.json({ success: true, application });
-    } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message });
+    if (error || !application) {
+      return res.status(404).json({ success: false, message: 'Application not found' });
     }
+
+    // Access control
+    const isCreator = application.creator_id === req.userId;
+    const isBrandOwner = application.brand_id === req.userId;
+
+    if (!isCreator && !isBrandOwner) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    res.json({ success: true, application });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Get all applications for the logged-in creator
-router.get('/my-applications', authenticate, requireRole('creator'), async (req: AuthRequest, res: Response) => {
+router.get('/my-applications', requireAuth, rbac(['creator']), async (req: AuthRequest, res: Response) => {
   try {
-    const applications = await Application.find({ creatorId: req.userId })
-      .populate('campaignId')
-      .sort({ createdAt: -1 });
+    const { data: applications, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        campaign:campaigns(*)
+      `)
+      .eq('creator_id', req.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     res.json({ success: true, applications });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -102,11 +117,30 @@ router.get('/my-applications', authenticate, requireRole('creator'), async (req:
 });
 
 // Get campaign applicants (brand only)
-router.get('/campaign/:campaignId', authenticate, requireRole('brand'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/campaign/:campaignId', requireAuth, rbac(['brand']), async (req: AuthRequest, res: Response) => {
   try {
-    const applications = await Application.find({ campaignId: req.params.campaignId })
-      .populate('creatorId', 'name email')
-      .sort({ createdAt: -1 });
+    // Check ownership
+    const { data: campaign } = await supabaseAdmin
+      .from('campaigns')
+      .select('brand_id')
+      .eq('id', req.params.campaignId)
+      .single();
+
+    if (!campaign || campaign.brand_id !== req.userId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const { data: applications, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        creator:users!creator_id(id, name, email),
+        profile:creator_profiles!creator_id(avatar, username, display_name)
+      `)
+      .eq('campaign_id', req.params.campaignId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     res.json({ success: true, applications });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -114,72 +148,67 @@ router.get('/campaign/:campaignId', authenticate, requireRole('brand'), async (r
 });
 
 // Update application status
-router.patch('/:id', authenticate, requireRole('brand'), async (req: AuthRequest, res: Response) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+router.patch('/:id', requireAuth, rbac(['brand']), async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.body;
     const { id } = req.params;
 
     if (!['accepted', 'rejected'].includes(status)) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'Invalid status. Must be "accepted" or "rejected".' });
+      return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const application = await Application.findById(id).session(session);
+    // 1. Get application & verify ownership
+    const { data: application } = await supabaseAdmin
+      .from('applications')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     if (!application) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Application not found.' });
+      return res.status(404).json({ success: false, message: 'Application not found' });
     }
 
-    const campaign = await Campaign.findById(application.campaignId).session(session);
-    if (!campaign) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Associated campaign not found.' });
+    if (application.brand_id !== req.userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    // Authorization: ensure the user is the brand owner of the campaign
-    if (campaign.brandId.toString() !== req.userId) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(403).json({ success: false, message: 'You are not authorized to update this application.' });
-    }
+    // 2. Update status
+    const { data: updatedApp, error } = await supabaseAdmin
+      .from('applications')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
 
-    // Prevent status change if already decided
-    if (application.status === 'accepted' || application.status === 'rejected') {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: `Application has already been ${application.status}.` });
-    }
+    if (error) throw error;
 
-    application.status = status;
-
+    // 3. If accepted, add to campaign selected creators
     if (status === 'accepted') {
-        campaign.selectedCreators = campaign.selectedCreators || [];
-        if (!campaign.selectedCreators.includes(application.creatorId)) {
-            campaign.selectedCreators.push(application.creatorId);
+      const { data: campaign } = await supabaseAdmin
+        .from('campaigns')
+        .select('selected_creators, status')
+        .eq('id', application.campaign_id)
+        .single();
+
+      if (campaign) {
+        const creators = campaign.selected_creators || [];
+        if (!creators.includes(application.creator_id)) {
+          creators.push(application.creator_id);
+
+          await supabaseAdmin
+            .from('campaigns')
+            .update({
+              selected_creators: creators,
+              status: campaign.status === 'active' ? 'in_progress' : campaign.status
+            })
+            .eq('id', application.campaign_id);
         }
-        // Optionally, update campaign status if this is the first accepted creator
-        if (campaign.status === 'active') {
-            campaign.status = 'in_progress';
-        }
+      }
     }
 
-    await application.save({ session });
-    await campaign.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.json({ success: true, application, campaign });
+    res.json({ success: true, application: updatedApp });
   } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(500).json({ success: false, message: `An error occurred: ${error.message}` });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

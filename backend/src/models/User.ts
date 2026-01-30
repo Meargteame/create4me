@@ -14,6 +14,11 @@ export interface IUser extends Document {
   verificationDate?: Date;
   verifiedBy?: mongoose.Types.ObjectId;
 
+  // Auth Providers
+  googleId?: string;
+  phoneNumber?: string;
+  isPhoneVerified: boolean;
+
   // Payment Providers
   paymentProviders: {
     telebirr?: {
@@ -79,6 +84,11 @@ const userSchema = new Schema<IUser>(
     isVettedProfile: { type: Boolean, default: false },
     verificationDate: Date,
     verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+
+    // Auth Providers
+    googleId: { type: String, unique: true, sparse: true },
+    phoneNumber: { type: String, unique: true, sparse: true },
+    isPhoneVerified: { type: Boolean, default: false },
 
     // Payment Providers
     paymentProviders: {

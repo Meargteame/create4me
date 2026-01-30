@@ -1,102 +1,136 @@
 import express, { Response } from 'express';
-import { Message } from '../models/Message';
-import { User } from '../models/User';
-import { authenticate, AuthRequest } from '../middleware/auth';
-import { FilterResult, ContentFilterService } from '../services/contentFilter';
+import { supabaseAdmin } from '../config/supabase';
+import { authenticate as requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-// Fetch messages for a conversation
-router.get('/:partnerId', authenticate, async (req: AuthRequest, res: Response) => {
-    const { partnerId } = req.params;
-    const userId = req.userId;
-
-    if (!partnerId) {
-        return res.status(400).json({ message: 'Partner ID is required' });
-    }
-
+// Send message
+router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-        const conversationId = [userId, partnerId].sort().join('_');
-        
-        const messages = await Message.find({ conversationId })
-            .populate('senderId', 'name role')
-            .populate('receiverId', 'name role')
-            .sort({ createdAt: 'asc' });
+        const { receiverId, content, conversationId } = req.body;
+        const senderId = req.userId;
 
-        res.status(200).json({ messages });
-    } catch (error) {
-        console.error('Error fetching messages:', error);
-        res.status(500).json({ message: 'Server error fetching messages' });
+        if (!receiverId || !content) {
+            return res.status(400).json({ success: false, message: 'Receiver and content are required' });
+        }
+
+        const convId = conversationId || [senderId, receiverId].sort().join('_');
+
+        const { data: message, error } = await supabaseAdmin
+            .from('messages')
+            .insert({
+                sender_id: senderId,
+                receiver_id: receiverId,
+                conversation_id: convId,
+                content,
+                is_read: false
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.status(201).json({ success: true, message });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// Send a new message
-router.post('/send', authenticate, async (req: AuthRequest, res: Response) => {
-    const { receiverId, content, conversationId: providedConvId } = req.body;
-    const senderId = req.userId;
-    const senderRole = req.user?.role;
-
-    if (!receiverId || !content) {
-        return res.status(400).json({ message: 'Receiver ID and content are required' });
-    }
-
-    // Content Filtering
-    const filterResult: FilterResult = ContentFilterService.filterMessage(content);
-    if (filterResult.hasFilteredContent) {
-        return res.status(400).json({
-            message: 'Message flagged for review. Please remove sensitive information.',
-            details: filterResult.filteredWords
-        });
-    }
-
+// Get conversation messages
+router.get('/conversation/:userId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-        const conversationId = providedConvId || [senderId, receiverId].sort().join('_');
+        const otherUserId = req.params.userId;
+        const currentUserId = req.userId;
 
-        const newMessage = new Message({
-            conversationId,
-            senderId,
-            receiverId,
-            senderRole,
-            content: filterResult.cleanContent,
-            read: false,
-            hasFilteredContent: filterResult.hasFilteredContent,
-            warningIssued: !!filterResult.warningMessage,
+        // Construct conversation ID deterministically
+        // NOTE: This assumes 1-on-1 chats. Supabase query could also simply be: 
+        // OR( (sender=me AND receiver=other), (sender=other AND receiver=me) )
+
+        const { data: messages, error } = await supabaseAdmin
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        res.json({ success: true, messages });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark messages as read
+router.put('/read/:senderId', requireAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const senderId = req.params.senderId;
+        const currentUserId = req.userId;
+
+        const { error } = await supabaseAdmin
+            .from('messages')
+            .update({ is_read: true })
+            .eq('sender_id', senderId)
+            .eq('receiver_id', currentUserId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get conversations list (recent chats)
+// This is complex in SQL/Supabase without a dedicated 'conversations' table.
+// We'll simulate it by grouping messages.
+router.get('/conversations', requireAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const currentUserId = req.userId;
+
+        // Fetch all messages involving the user
+        // Note: This is inefficient for large datasets. 
+        // Optimization: Create a 'conversations' table or Postgres View.
+        const { data: messages, error } = await supabaseAdmin
+            .from('messages')
+            .select(`
+        *,
+        sender:users!sender_id(name, email),
+        receiver:users!receiver_id(name, email)
+      `)
+            .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Group by conversation partner
+        const conversationMap = new Map();
+
+        messages?.forEach((msg: any) => {
+            const partnerId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+            if (!conversationMap.has(partnerId)) {
+                conversationMap.set(partnerId, {
+                    userId: partnerId,
+                    lastMessage: msg.content,
+                    timestamp: msg.created_at,
+                    unreadCount: (msg.receiver_id === currentUserId && !msg.is_read) ? 1 : 0,
+                    partnerName: msg.sender_id === currentUserId ? msg.receiver?.name : msg.sender?.name,
+                    partnerEmail: msg.sender_id === currentUserId ? msg.receiver?.email : msg.sender?.email
+                });
+            } else {
+                // Accumulate unread count
+                if (msg.receiver_id === currentUserId && !msg.is_read) {
+                    const conv = conversationMap.get(partnerId);
+                    conv.unreadCount += 1;
+                }
+            }
         });
 
-        await newMessage.save();
+        const conversations = Array.from(conversationMap.values());
+        res.json({ success: true, conversations });
 
-        const populatedMessage = await Message.findById(newMessage._id)
-            .populate('senderId', 'name role')
-            .populate('receiverId', 'name role')
-            .exec();
-
-        // Prepare response with warnings if content was filtered
-        const response: any = {
-            success: true,
-            message: populatedMessage
-        };
-
-        if (filterResult.hasFilteredContent) {
-            response.warning = {
-                message: filterResult.warningMessage,
-                filteredCount: filterResult.filteredWords.length,
-                riskLevel: filterResult.riskLevel
-            };
-        }
-
-        // Add high-risk alert if necessary
-        if (filterResult.riskLevel === 'high') {
-            response.alert = {
-                level: 'high',
-                message: '🚨 Your message contains high-risk content. Repeated violations may result in account suspension.',
-                reasons: filterResult.filteredWords
-            };
-        }
-
-        res.status(201).json(response);
-    } catch (error) {
-        console.error('Error sending message:', error);
-        res.status(500).json({ message: 'Server error sending message' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

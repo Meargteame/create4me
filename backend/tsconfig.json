@@ -16,10 +16,6 @@
     "types": [
       "node",
       "jest"
-    ],
-    "typeRoots": [
-      "./src/types",
-      "./node_modules/@types"
     ]
   },
   "include": [
